@@ -1,0 +1,38 @@
+<ion-header>
+  <ion-toolbar>
+    <div class="d-inline-flex justify-content-between w-100 px-2">
+      <a
+        (click)="logoClicked()"
+        class="text-uppercase text-white fw-bold title"
+        mat-button
+      >
+        E-nvit
+      </a>
+      <button mat-icon-button [matMenuTriggerFor]="belowMenu">
+        <mat-icon
+          class="text-white"
+          matPrefix
+          svgIcon="person-circle"
+        ></mat-icon>
+      </button>
+    </div>
+    <mat-menu #belowMenu="matMenu" yPosition="below">
+      <button
+        mat-menu-item
+        (click)="openChangePassword()"
+        class="d-inline-flex"
+      >
+        <mat-icon matPrefix svgIcon="translate"></mat-icon>
+        <ion-text>{{ "navbar.languages" | translate }}</ion-text>
+      </button>
+      <button mat-menu-item (click)="changepass()" class="d-inline-flex">
+        <mat-icon matPrefix svgIcon="lock-fill"></mat-icon>
+        <ion-text>{{ "navbar.changeLanguage" | translate }}</ion-text>
+      </button>
+      <button mat-menu-item (click)="logout()" class="d-inline-flex">
+        <mat-icon matPrefix svgIcon="box-arrow-right"></mat-icon>
+        <ion-text>{{ "navbar.logout" | translate }}</ion-text>
+      </button>
+    </mat-menu>
+  </ion-toolbar>
+</ion-header>

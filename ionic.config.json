@@ -1,0 +1,10 @@
+{
+  "name": "envit-mobile-app",
+  "integrations": {
+    "capacitor": {},
+    "cordova": {
+      "enabled": false
+    }
+  },
+  "type": "angular-standalone"
+}

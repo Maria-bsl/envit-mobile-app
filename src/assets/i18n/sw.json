@@ -1,0 +1,206 @@
+{
+  "defaults": {
+    "actions": {
+      "continue": "Kuendelea",
+      "confirm": "Thibitisha",
+      "cancel": "Katisha",
+      "ok": "Sawa"
+    },
+    "errors": {
+      "pleaseFill": "Tafadhali jaza",
+      "failed": "Imeshindwa",
+      "unexpectedError": "Kosa lisilotarajiwa lilitokea. Tafadhali jaribu tena au wasiliana na msaada."
+    },
+    "labels": {
+      "filterNoDataFound": "Hakuna data inayolingana na kichujio",
+      "loadingPleaseWait": "Tafadhali, subiri dakika chache"
+    }
+  },
+  "refresher": {
+    "pullingText": "Vuta kwa kuburudisha",
+    "refreshingText": "Kuonyesha upya..."
+  },
+  "tabs": {
+    "home": "Nyumbani",
+    "verify": "Thibitisha",
+    "invitee": "Waalikwa"
+  },
+  "navbar": {
+    "languages": "Chagua lugha",
+    "changeLanguage": "Badilisha nywila",
+    "logout": "Ondoka",
+    "selectLanguage": {
+      "changeLanguageText": "Badilisha lugha",
+      "languageText": "Lugha",
+      "selectLanguageText": "Chagua lugha",
+      "successChange": "Lugha imebadilika! Tafadhali onyesha upya.",
+      "languages": [
+        {
+          "title": "English",
+          "code": "en"
+        },
+        {
+          "title": "Kiswahili",
+          "code": "sw"
+        }
+      ]
+    }
+  },
+  "loginPage": {
+    "signInMessage": "Ingia kwenye akaunti yako",
+    "forgotPassword": "Umesahau nywila?",
+    "loginButtonText": "Ingia ndani",
+    "loginForm": {
+      "labels": {
+        "mobileNumber": "Nambari ya simu",
+        "password": "Nywila"
+      },
+      "placeholders": {
+        "mobileNumber": "Ingiza namba ya simu",
+        "password": "Ingiza nywila"
+      },
+      "errors": {
+        "invalidPhoneNumber": "Namba ya simu batili",
+        "loginFailed": "Kuingia Imeshindwa"
+      }
+    }
+  },
+  "switchEvent": {
+    "welcomeText": "Karibu",
+    "selectEventText": "Tafadhali chagua tukio la kuendelea."
+  },
+  "dashboardPage": {
+    "topBanner": {
+      "event": "Tukio",
+      "chart": {
+        "checked": "Iliyosajiliwa",
+        "unchecked": "Haijasajiliwa",
+        "in": "Ndani",
+        "remaining": "Waliyobaki",
+        "total": "Jumla"
+      }
+    },
+    "search": "Tafuta jina la mwalikwa",
+    "clickHereToVerifyGuest": "Bonyeza hapa ili kuthibitisha mgeni",
+    "checkedInviteesTable": [
+      "Jina la Mgeni",
+      "Imechanganuliwa",
+      "Meza",
+      "Imethibitishwa na"
+    ],
+    "cameraPermissionDenied": "Ruhusa ya kamera imekataliwa.",
+    "failedToReadQrCode": "Imeshindwa kusoma msimbo wa qr."
+  },
+  "qrpage": {
+    "invitee": "Mwaliko",
+    "cardSize": "Ukubwa wa Kadi",
+    "code": "Msimbo",
+    "venu": "Venu",
+    "numberOfVisitors": "Idadi ya wageni",
+    "selectNumberOfInvitees": "Chagua idadi ya waalikwa"
+  },
+  "verifyCode": {
+    "serialNumberText": "Ingiza nambari ya serial ili kuthibitisha",
+    "serialNumber": "Nambari ya Serial",
+    "form": {
+      "placeholders": {
+        "serialNumber": "Ingiza nambari ya serial"
+      },
+      "errors": {
+        "serialNumber": "Tafadhali ingiza nambari ya serial"
+      }
+    },
+    "actions": {
+      "verify": "Thibitisha"
+    }
+  },
+  "verifyUser": {
+    "registerVisitorText": "Thibitisha mgeni",
+    "panel": {
+      "visitorName": "Jina la mgeni",
+      "numberOfVisitors": "Idadi ya wageni",
+      "tableNumber": "Namba ya meza"
+    },
+    "form": {
+      "label": {
+        "selectNumberOfVisitors": "Chagua idadi ya wageni",
+        "persons": "Watu",
+        "pickNumber": "Chagua namba"
+      },
+      "errors": {
+        "emptyNumberOfInvitees": "Tafadhali ingia kwenye waalikwa.",
+        "numberOfInviteesExceeded": "Idadi kubwa ya waalikwa"
+      }
+    }
+  },
+  "tabs2": {
+    "title": "Orodha ya wageni",
+    "visitorsList": ["Jina la Mgeni", "Simu", "Idadi", "Meza"]
+  },
+  "registrationPage": {
+    "title": "Ongeza mwalikwa mpya",
+    "form": {
+      "labels": {
+        "inviteeName": "Jina la mwalikwa",
+        "mobileNumber": "Nambari ya simu",
+        "cardSize": "Ukubwa wa kadi",
+        "tableNumber": "Namba ya meza",
+        "emailAddress": "Anwani ya barua pepe"
+      },
+      "placeholders": {
+        "inviteeName": "Ingiza jina la mwalikwa",
+        "mobileNumber": "Nambari ya simu",
+        "cardSize": "Ingiza ukubwa wa kadi",
+        "tableNumber": "Ingiza namba ya meza",
+        "emailAddress": "Ingiza anwani ya barua pepe"
+      },
+      "errors": {
+        "invalidEmail": "Barua pepe batili",
+        "missingInviteeName": "Tafadhali, ingiza jina la mwaliko",
+        "missingMobileNumber": "Tafadhali, ingiza nambari ya simu",
+        "missingCardSize": "Tafadhali, ingiza ukubwa wa kadi"
+      }
+    },
+    "actions": {
+      "addInvitee": "Ongeza mwalikwa"
+    }
+  },
+  "changePasswordPage": {
+    "title": "Badilisha Nywila",
+    "passwordChangedSuccessfully": "Nywila ilibadilika kwa mafanikio.",
+    "form": {
+      "labels": {
+        "currentPassword": "Nywila ya sasa",
+        "createPassword": "Unda nywila",
+        "confirmPassword": "Thibitisha nywila"
+      },
+      "placeholders": {
+        "currentPassword": "Ingiza nywila ya sasa",
+        "createPassword": "Nywila mpya",
+        "confirmPassword": "Thibitisha nywila"
+      },
+      "errors": {
+        "currentPassword": "Tafadhali, ingiza nywila yako ya sasa",
+        "createPassword": "Tafadhali, ingiza password mpya",
+        "confirmPassword": "Tafadhali, ingiza nenosiri la kuthibitisha",
+        "passwordsDoNotMatchText": "Nywila hazilingani."
+      }
+    }
+  },
+  "forgotPasswordPage": {
+    "title": "Weka upya Nywila",
+    "welcomeText": "Tafadhali ingiza nambari halali ya simu",
+    "haveAccountText": "Nina akaunti",
+    "form": {
+      "labels": {
+        "mobileNumber": "Nambari ya simu"
+      },
+      "placeholders": {
+        "mobileNumber": "Nambari ya simu"
+      }
+    },
+    "actions": {
+      "send": "Send"
+    }
+  }
+}

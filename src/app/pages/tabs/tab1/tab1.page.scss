@@ -1,0 +1,89 @@
+ion-header {
+  ion-toolbar {
+    --background: var(--sys-primary);
+  }
+}
+ion-content {
+  .qrClass {
+    text-align: center;
+  }
+  .msg {
+    text-align: center;
+  }
+  p {
+    margin-top: 10px;
+  }
+  ion-searchbar {
+    border-radius: 20px 20px 20px 20px;
+  }
+  .scanner-box {
+    width: 80%;
+    max-width: 300px;
+    height: 300px;
+    border: 2px solid #fff;
+    border-radius: 10px;
+    margin: 0 auto;
+    margin-top: 20px;
+  }
+  ion-refresher {
+    background-color: transparent;
+  }
+  #chart {
+    max-width: 380px;
+    margin: 35px auto;
+    padding: 0;
+  }
+  #yudhatp-chart {
+    width: 10px;
+    height: 10px;
+    align-items: center;
+    justify-content: center;
+  }
+  .complete-scan-status {
+    color: #21532f;
+    background-color: #c1ffd1;
+    padding: 4px;
+    border-radius: 4px;
+  }
+  .pending-scan-status {
+    color: #514820;
+    background-color: #fff5bc;
+    padding: 4px;
+    border-radius: 4px;
+  }
+  .gray-color {
+    background-color: #f6f8fc;
+  }
+  .event-detail-grid {
+    border: 2px solid grey;
+    border-radius: 5px;
+    border-style: double;
+    padding: 0;
+  }
+  .remain-guests ion-text {
+    color: #eb445a !important;
+  }
+  .verified-guests ion-text {
+    color: #2dd36f !important;
+  }
+  .event-detail-grid ion-row {
+    padding: 0 12px 0 12px;
+  }
+  .event-detail-grid ion-row .total-visitors {
+    color: #3880ff;
+    font-size: 24px;
+  }
+  .event-detail-grid ion-row ion-col .visitor-stats ion-text:first-child {
+    font-size: 16px;
+  }
+  .event-detail-grid ion-row ion-col .visitor-stats ion-text:last-child {
+    font-size: 32px;
+  }
+  .event-detail-grid ion-row:first-child {
+    background-color: #ffffff;
+  }
+  .list-card {
+    transition-property: height;
+    transition-duration: 0.2s;
+  }
+}

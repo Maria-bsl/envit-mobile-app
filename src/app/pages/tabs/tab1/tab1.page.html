@@ -1,0 +1,204 @@
+<app-navbar (languageChanged)="onLanguageChanged()"></app-navbar>
+<ion-content class="ion-padding">
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+  <ion-grid class="event-detail-grid">
+    <ion-row>
+      <ion-col size="12" class="d-inline-flex">
+        <p class="fw-bold mr-1">
+          {{'dashboardPage.topBanner.event' | translate}}:
+        </p>
+        <p class="text-truncate text-uppercase pl-2">{{eventname}}</p>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col size="6">
+        <ng-container *ngIf="chartOptions">
+          <highcharts-chart
+            #chartCol
+            [Highcharts]="Highcharts"
+            [options]="chartOptions"
+            [constructorType]="chartConstructor"
+            [callbackFunction]="chartCallback"
+            [(update)]="updateFromInput"
+            [oneToOne]="true"
+          >
+          </highcharts-chart>
+        </ng-container>
+      </ion-col>
+      <ion-col size="6" class="d-flex flex-column">
+        <div
+          class="visitor-stats d-flex flex-column align-items-end mb-4 verified-guests"
+        >
+          <ion-text class="mb-2">
+            {{'dashboardPage.topBanner.chart.in' | translate}}
+          </ion-text>
+          <ion-text color="success"> {{guestIn}} </ion-text>
+        </div>
+        <div
+          class="visitor-stats d-flex flex-column align-items-end remain-guests"
+        >
+          <ion-text class="mb-2">
+            {{'dashboardPage.topBanner.chart.remaining' | translate}}
+          </ion-text>
+          <ion-text color="danger"> {{remains}} </ion-text>
+        </div>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+  <div
+    class="qrClass d-flex flex-column w-100 justify-content-center align-items-center"
+  >
+    <img
+      (click)="startScanning()"
+      src="assets/icon/qr-code.png"
+      alt="centered image"
+      style="margin-top: 20px"
+      class="w-25"
+    />
+    <ion-text class="mt-1">
+      {{'dashboardPage.clickHereToVerifyGuest' | translate}}
+    </ion-text>
+  </div>
+
+  <div class="last">
+    <ion-searchbar
+      placeholder="{{'dashboardPage.search' | translate}}"
+      showCancelButton="focus"
+      [formControl]="filterTerm"
+    ></ion-searchbar>
+  </div>
+  <div class="d-flex flex-column">
+    <div class="d-flex align-items-center my-2">
+      <ng-container>
+        <button
+          *ngIf="showingList; else fabListButton"
+          mat-mini-fab
+          (click)="showingList = true"
+        >
+          <mat-icon matPrefix svgIcon="card-checklist"></mat-icon>
+        </button>
+        <ng-template #fabListButton>
+          <button mat-icon-button (click)="showingList = true">
+            <mat-icon matPrefix svgIcon="card-checklist"></mat-icon>
+          </button>
+        </ng-template>
+      </ng-container>
+      <ng-container>
+        <button
+          *ngIf="!showingList; else fabTableButton"
+          mat-mini-fab
+          (click)="showingList = false"
+        >
+          <mat-icon matPrefix svgIcon="table"></mat-icon>
+        </button>
+        <ng-template #fabTableButton>
+          <button mat-icon-button (click)="showingList = false">
+            <mat-icon matPrefix svgIcon="table"></mat-icon>
+          </button>
+        </ng-template>
+      </ng-container>
+    </div>
+    <ng-container *ngIf="showingList; else tableView">
+      <div [@inOutAnimation] id="list-view" class="d-flex flex-column">
+        <div
+          *ngFor="let invitee of dataSource.filteredData | slice
+        : 1 + paginator.pageSize * paginator.pageIndex - 1
+        : 1 +
+            paginator.pageSize * paginator.pageIndex +
+            paginator.pageSize -
+            1; index as ind;"
+          class="d-flex flex-column h-50 mb-2 rounded px-2 py-1 shadow-sm list-card"
+          [class]="ind % 2 === 0 ? 'gray-color' : 'bg-white'"
+          [@listAnimationDesktop]="dataSource.filteredData.length"
+        >
+          <div
+            *ngFor="let column of 'dashboardPage.checkedInviteesTable' | translate; index as i"
+            class="d-flex align-items-center justify-content-between border-b p-1"
+          >
+            <ion-text class="fw-bold">{{column}}</ion-text>
+            <ion-text
+              *ngIf="i !== CheckedInviteesTable.SCANNED; else scannedTemplate"
+              class="text-right"
+              >{{getTableValue(invitee,i)}}</ion-text
+            >
+            <ng-template #scannedTemplate>
+              <ion-text
+                [ngClass]="getInviteeScanStatusColor(invitee.scan_status)"
+                class="text-right"
+              >
+                {{invitee.scan_status}}
+              </ion-text>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+    <ng-template #tableView>
+      <div class="overflow-auto">
+        <table
+          *ngIf="listOfInvitee"
+          [@inOutAnimation]
+          class="table table-striped table-striped"
+        >
+          <thead>
+            <tr>
+              <th
+                *ngFor="let column of 'dashboardPage.checkedInviteesTable' | translate; index as i"
+              >
+                <ion-text>{{column}}</ion-text>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let invitee of dataSource.filteredData | slice
+          : 1 + paginator.pageSize * paginator.pageIndex - 1
+          : 1 +
+              paginator.pageSize * paginator.pageIndex +
+              paginator.pageSize -
+              1; index as ind;"
+              class="listMargin"
+              [@listAnimationDesktop]="dataSource.filteredData.length"
+            >
+              <td
+                *ngFor="let column of 'dashboardPage.checkedInviteesTable' | translate; index as i"
+              >
+                <ion-text
+                  *ngIf="i !== CheckedInviteesTable.SCANNED; else scannedTemplate"
+                  class="text-right"
+                  >{{getTableValue(invitee,i)}}</ion-text
+                >
+                <ng-template #scannedTemplate>
+                  <ion-text
+                    [ngClass]="getInviteeScanStatusColor(invitee.scan_status)"
+                    >{{invitee.scan_status}}</ion-text
+                  >
+                </ng-template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-template>
+    <ng-container
+      *ngIf="dataSource.data.length > 0 && dataSource.filteredData.length === 0"
+    >
+      <ion-text
+        >{{("defaults.labels.filterNoDataFound" | translate)}}
+        <b>"{{filterTerm.value}}"</b></ion-text
+      >
+    </ng-container>
+    <div class="mt-2 pt-2">
+      <mat-paginator
+        #paginator
+        [length]="dataSource.filteredData.length"
+        [pageSize]="5"
+        [pageSizeOptions]="[5, 10, 20]"
+        aria-label="Select page"
+        [showFirstLastButtons]="true"
+      ></mat-paginator>
+    </div>
+  </div>
+</ion-content>

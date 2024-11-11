@@ -1,0 +1,13 @@
+ion-header {
+  ion-toolbar {
+    --background: var(--sys-primary);
+  }
+  .title {
+    font-size: 24px;
+    //margin-left: 12px;
+    letter-spacing: 4px;
+  }
+  mat-menu {
+    background-color: var(--sys-surface) !important;
+  }
+}

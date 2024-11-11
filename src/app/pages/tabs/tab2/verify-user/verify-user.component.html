@@ -1,0 +1,126 @@
+<app-navbar></app-navbar>
+<ion-content class="ion-padding">
+  <div class="d-flex flex-column w-100">
+    <ion-text class="display-3 text-center">
+      {{ "verifyUser.registerVisitorText" | translate }}
+    </ion-text>
+    <mat-card class="mt-4">
+      <mat-card-content>
+        <ion-grid>
+          <ion-row>
+            <ion-col size="12" class="d-flex align-items-center">
+              <ion-text class="fw-bold mr-1">
+                {{ "verifyUser.panel.visitorName" | translate }}:</ion-text
+              >
+              <ion-text>{{ qrinfo.visitor_name }}</ion-text>
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col size="12" class="d-flex align-items-center">
+              <ion-text class="fw-bold mr-1"
+                >{{
+                  "verifyUser.panel.numberOfVisitors" | translate
+                }}:</ion-text
+              >
+              <ion-text>{{ qrinfo.unchecked_invitee }}</ion-text>
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col size="12" class="d-flex align-items-center">
+              <ion-text class="fw-bold mr-1"
+                >{{ "verifyUser.panel.tableNumber" | translate }}:</ion-text
+              >
+              <ion-text>{{ qrinfo.table_number }}</ion-text>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </mat-card-content>
+    </mat-card>
+    <form id="verify-user-form" class="w-100" (ngSubmit)="verifyuser()">
+      <ng-container
+        *ngIf="
+          qrinfo.unchecked_invitee <= MAX_INVITES_FOR_SELECT;
+          else enterVisitorsNumber
+        "
+      >
+        <div class="d-flex flex-column w-100 mt-4">
+          <ion-text class="small fw-bold mb-1">{{
+            "verifyUser.form.label.selectNumberOfVisitors" | translate
+          }}</ion-text>
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-label>
+              {{ "verifyUser.panel.numberOfVisitors" | translate }}
+            </mat-label>
+            <mat-select [formControl]="Number_Of_CheckingIn_Invitees">
+              <mat-option disabled selected>{{
+                "verifyUser.form.label.selectNumberOfVisitors" | translate
+              }}</mat-option>
+              <mat-option
+                [value]="numberOfVisitor"
+                *ngFor="
+                  let numberOfVisitor of getAvailableNumberOfInvitees();
+                  index as ind
+                "
+              >
+                {{ numberOfVisitor }} Person(s)
+              </mat-option>
+            </mat-select>
+            <mat-error>
+              {{ "verifyUser.form.errors.emptyNumberOfInvitees" | translate }}
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </ng-container>
+      <ng-template #enterVisitorsNumber>
+        <div class="d-flex flex-column w-100 mt-4">
+          <ion-text class="small fw-bold mb-1 text-center w-100">{{
+            "verifyUser.form.label.selectNumberOfVisitors" | translate
+          }}</ion-text>
+          <mat-form-field
+            appearance="outline"
+            class="w-100 d-flex align-items-center justify-content-center"
+          >
+            <input
+              matInput
+              type="number"
+              placeholder="Number of persons"
+              [formControl]="Number_Of_CheckingIn_Invitees"
+              autocomplete="off"
+            />
+            <mat-error
+              *ngIf="
+                Number_Of_CheckingIn_Invitees &&
+                Number_Of_CheckingIn_Invitees.invalid &&
+                Number_Of_CheckingIn_Invitees.touched
+              "
+            >
+              <ng-container
+                *ngIf="Number_Of_CheckingIn_Invitees.hasError('required')"
+              >
+                {{ "verifyUser.form.errors.emptyNumberOfInvitees" | translate }}
+              </ng-container>
+              <ng-container
+                *ngIf="
+                  Number_Of_CheckingIn_Invitees.hasError('maximumExceeded')
+                "
+              >
+                {{
+                  "verifyUser.form.errors.numberOfInviteesExceeded" | translate
+                }}
+              </ng-container>
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </ng-template>
+      <ion-button
+        expand="block"
+        form="verify-user-form"
+        class="my-4 w-100 text-uppercase"
+        [disabled]="postData.invalid"
+        type="ngSubmit"
+      >
+        {{ "verifyCode.actions.verify" | translate }}
+      </ion-button>
+    </form>
+  </div>
+</ion-content>

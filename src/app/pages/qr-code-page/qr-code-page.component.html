@@ -1,0 +1,70 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title> {{ "verifyUser.registerVisitorText" | translate }} </ion-title>
+    <ion-buttons slot="start">
+      <ion-button (click)="backBtn()">
+        <ion-icon
+          size="large"
+          name="arrow-back"
+          style="font-size: 1.2rem"
+          color="light"
+        ></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar> </ion-header
+><ion-content class="ion-padding">
+  <ion-card>
+    <ion-card-content>
+      <ion-item>
+        <ion-col size="4">Invitee:</ion-col>
+        <ion-col size="8">
+          <p style="text-align: right; font-weight: 600; margin-top: 15px">
+            {{ inviteeN }}
+          </p>
+        </ion-col>
+      </ion-item>
+      <ion-item>
+        <ion-col size="4">Card Size: </ion-col>
+        <ion-col size="8">
+          <p style="text-align: right; font-weight: 600; margin-top: 15px">
+            {{ cardsize }}
+          </p>
+        </ion-col>
+      </ion-item>
+      <ion-item>
+        <ion-col size="4">Code:</ion-col>
+        <ion-col size="8">
+          <p style="text-align: right; font-weight: 600; margin-top: 15px">
+            {{ qrcode }}
+          </p>
+        </ion-col>
+      </ion-item>
+      <ion-item>
+        <ion-col size="4">Venue:</ion-col>
+        <ion-col size="8">
+          <p style="text-align: right; font-weight: 600; margin-top: 15px">
+            {{ venue }}
+          </p>
+        </ion-col>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+  <ion-item class="mx-1">
+    <div class="d-flex flex-column w-100">
+      <ion-text class="small fw-bold mb-1">{{
+        "verifyUser.form.label.selectNumberOfVisitors" | translate
+      }}</ion-text>
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>
+          {{ "verifyUser.panel.numberOfVisitors" | translate }}
+        </mat-label>
+        <mat-select [(ngModel)]="postData.Number_Of_CheckingIn_Invitees">
+          <mat-option [value]="no" *ngFor="let no of counts">
+            {{ no }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </ion-item>
+  <ion-button class="mt-4" expand="block" (click)="verify()">verify</ion-button>
+</ion-content>

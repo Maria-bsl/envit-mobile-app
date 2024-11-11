@@ -1,0 +1,204 @@
+{
+  "defaults": {
+    "actions": {
+      "continue": "Continue",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "ok": "Ok"
+    },
+    "errors": {
+      "pleaseFill": "Please fill.",
+      "failed": "Failed.",
+      "unexpectedError": "An unexpected error occurred. Please try again or contact support."
+    },
+    "labels": {
+      "filterNoDataFound": "No data matching the filter",
+      "loadingPleaseWait": "Loading, please wait a minute..."
+    }
+  },
+  "refresher": {
+    "pullingText": "Pull to refresh",
+    "refreshingText": "Refreshing..."
+  },
+  "tabs": {
+    "home": "Home",
+    "verify": "Verify",
+    "invitee": "Invitee"
+  },
+  "navbar": {
+    "languages": "Change language",
+    "changeLanguage": "Change password",
+    "logout": "Log out",
+    "selectLanguage": {
+      "changeLanguageText": "Change language",
+      "languageText": "Language",
+      "selectLanguageText": "Select language",
+      "successChange": "Language changed! Please refresh.",
+      "languages": [
+        {
+          "title": "English",
+          "code": "en"
+        },
+        {
+          "title": "Swahili",
+          "code": "sw"
+        }
+      ]
+    }
+  },
+  "loginPage": {
+    "signInMessage": "Sign in to your account",
+    "forgotPassword": "Forgot Password?",
+    "loginButtonText": "Log In",
+    "loginForm": {
+      "labels": {
+        "mobileNumber": "Mobile number",
+        "password": "Password"
+      },
+      "hints": {
+        "mobileNumber": "Mobile numbers must start with 0."
+      },
+      "placeholders": {
+        "mobileNumber": "Enter mobile number",
+        "password": "Enter password"
+      },
+      "errors": {
+        "invalidPhoneNumber": "Invalid phone number",
+        "loginFailed": "Login Failed"
+      }
+    }
+  },
+  "switchEvent": {
+    "welcomeText": "Welcome",
+    "selectEventText": "Please select an event to continue."
+  },
+  "dashboardPage": {
+    "topBanner": {
+      "event": "Event",
+      "chart": {
+        "checked": "Checked",
+        "unchecked": "Unchecked",
+        "in": "In",
+        "remaining": "Remaining",
+        "total": "Total"
+      }
+    },
+    "search": "Search by invitee name",
+    "clickHereToVerifyGuest": "Click here to verify guest",
+    "checkedInviteesTable": ["Name", "Scanned", "Table", "Approved"],
+    "cameraPermissionDenied": "Camera permissions denied.",
+    "failedToReadQrCode": "Failed to read qr code."
+  },
+  "qrpage": {
+    "invitee": "Invitee",
+    "cardSize": "Card Size",
+    "code": "Code",
+    "venu": "Venu",
+    "numberOfVisitors": "Number of visitor(s)",
+    "selectNumberOfInvitees": "Select number of invitees"
+  },
+  "verifyCode": {
+    "serialNumberText": "Enter serial number to verify",
+    "serialNumber": "Serial Number",
+    "form": {
+      "placeholders": {
+        "serialNumber": "Enter serial number"
+      },
+      "errors": {
+        "serialNumber": "Please enter serial number"
+      }
+    },
+    "actions": {
+      "verify": "Verify"
+    }
+  },
+  "verifyUser": {
+    "registerVisitorText": "Verify visitor",
+    "panel": {
+      "visitorName": "Visitor name",
+      "numberOfVisitors": "Number of visitors",
+      "tableNumber": "Table number"
+    },
+    "form": {
+      "label": {
+        "selectNumberOfVisitors": "Select number of visitors",
+        "persons": "Person(s)",
+        "pickNumber": "Pick a number"
+      },
+      "errors": {
+        "emptyNumberOfInvitees": "Please enter attending invitees.",
+        "numberOfInviteesExceeded": "Exceeded number of invitees"
+      }
+    }
+  },
+  "tabs2": {
+    "title": "List of all invitees",
+    "visitorsList": ["Name", "Mobile", "Size", "Table"]
+  },
+  "registrationPage": {
+    "title": "Add new invitee",
+    "form": {
+      "labels": {
+        "inviteeName": "Invitee name",
+        "mobileNumber": "Mobile number",
+        "cardSize": "Card size",
+        "tableNumber": "Table number",
+        "emailAddress": "Email address"
+      },
+      "placeholders": {
+        "inviteeName": "Enter invitee name",
+        "mobileNumber": "Mobile number",
+        "cardSize": "Enter card size",
+        "tableNumber": "Enter table number",
+        "emailAddress": "Enter email address"
+      },
+      "errors": {
+        "invalidEmail": "Invalid email",
+        "missingInviteeName": "Please, enter invitee name",
+        "missingMobileNumber": "Please, enter mobile number",
+        "missingCardSize": "Please, enter card size"
+      }
+    },
+    "actions": {
+      "addInvitee": "Add invite"
+    }
+  },
+  "changePasswordPage": {
+    "title": "Change Password",
+    "passwordChangedSuccessfully": "Password changed successfuly.",
+    "form": {
+      "labels": {
+        "currentPassword": "Current password",
+        "createPassword": "Create password",
+        "confirmPassword": "Confirm password"
+      },
+      "placeholders": {
+        "currentPassword": "Enter current password",
+        "createPassword": "New password",
+        "confirmPassword": "Confirm password"
+      },
+      "errors": {
+        "currentPassword": "Please, enter your current password",
+        "createPassword": "Please, enter a new password",
+        "confirmPassword": "Please, enter confirm password",
+        "passwordsDoNotMatchText": "Passwords do not match."
+      }
+    }
+  },
+  "forgotPasswordPage": {
+    "title": "Reset Password",
+    "welcomeText": "Please enter a valid phone number",
+    "haveAccountText": "I have an account",
+    "form": {
+      "labels": {
+        "mobileNumber": "Mobile number"
+      },
+      "placeholders": {
+        "mobileNumber": "Mobile number"
+      }
+    },
+    "actions": {
+      "send": "Send"
+    }
+  }
+}

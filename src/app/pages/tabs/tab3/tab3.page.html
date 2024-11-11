@@ -1,0 +1,181 @@
+<!-- <ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>
+      Tab 3
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">Tab 3</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <app-explore-container name="Tab 3 page"></app-explore-container>
+</ion-content> -->
+
+<app-navbar></app-navbar>
+<ion-content class="ion-padding">
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+  <div class="d-flex flex-column w-100">
+    <div class="d-flex justify-content-between mb-2">
+      <ion-text class="display-4"> {{"tabs2.title" | translate}} </ion-text>
+      <ion-button (click)="addInvitees()" aria-label="Add">
+        <ion-icon name="add-outline"></ion-icon>
+      </ion-button>
+    </div>
+    <ion-searchbar
+      placeholder="{{'dashboardPage.search' | translate}}"
+      showCancelButton="focus"
+      [formControl]="searchInput"
+    ></ion-searchbar>
+    <div class="d-flex flex-column">
+      <div class="d-flex align-items-center my-2">
+        <!-- <ion-button
+          (click)="showingList = true"
+          [fill]="showingList ? '' : 'clear'"
+        >
+          <ion-icon slot="icon-only" name="list"></ion-icon>
+        </ion-button>
+        <ion-button
+          (click)="showingList = false"
+          [fill]="!showingList ? '' : 'clear'"
+        >
+          <ion-icon slot="icon-only" name="grid"></ion-icon>
+        </ion-button> -->
+        <ng-container>
+          <button
+            *ngIf="showingList; else fabListButton"
+            mat-mini-fab
+            (click)="showingList = true"
+          >
+            <mat-icon matPrefix svgIcon="card-checklist"></mat-icon>
+          </button>
+          <ng-template #fabListButton>
+            <button mat-icon-button (click)="showingList = true">
+              <mat-icon matPrefix svgIcon="card-checklist"></mat-icon>
+            </button>
+          </ng-template>
+        </ng-container>
+        <ng-container>
+          <button
+            *ngIf="!showingList; else fabTableButton"
+            mat-mini-fab
+            (click)="showingList = false"
+          >
+            <mat-icon matPrefix svgIcon="table"></mat-icon>
+          </button>
+          <ng-template #fabTableButton>
+            <button mat-icon-button (click)="showingList = false">
+              <mat-icon matPrefix svgIcon="table"></mat-icon>
+            </button>
+          </ng-template>
+        </ng-container>
+      </div>
+      <ng-container *ngIf="showingList; else tableView">
+        <div id="list-view" class="d-flex flex-column" [@inOutAnimation]>
+          <div
+            *ngFor="let invitee of dataSource.filteredData | slice
+            : 1 + paginator.pageSize * paginator.pageIndex - 1
+            : 1 +
+                paginator.pageSize * paginator.pageIndex +
+                paginator.pageSize -
+                1; index as ind;"
+            class="h-50 d-flex flex-column mb-2 rounded px-2 py-1 shadow-sm"
+            [class]="ind % 2 === 0 ? 'gray-color' : 'bg-white'"
+            #templateList
+            [@listAnimationDesktop]="dataSource.filteredData.length"
+            matRipple
+            (click)="scanVisitor(invitee)"
+          >
+            <div
+              *ngFor="let column of 'tabs2.visitorsList' | translate; index as i"
+              class="d-flex align-items-center justify-content-between border-b p-1"
+            >
+              <ion-text class="fw-bold">{{column}}</ion-text>
+              <ion-text class="text-right"
+                >{{getTableValue(invitee,i)}}</ion-text
+              >
+            </div>
+            <!-- <div
+              class="d-flex align-items-center justify-content-between border-b p-1"
+            >
+              <ion-text class="fw-bold"></ion-text>
+              <button mat-icon-button (click)="scanVisitor(invitee)">
+                <mat-icon svgIcon="qr-code-scan" matPrefix></mat-icon>
+              </button>
+            </div> -->
+          </div>
+        </div>
+      </ng-container>
+      <ng-template #tableView>
+        <div [@inOutAnimation] class="overflow-auto">
+          <table
+            class="table table-striped table table-striped"
+            style="position: sticky"
+          >
+            <thead>
+              <tr>
+                <th
+                  *ngFor="let column of 'tabs2.visitorsList' | translate; index as i"
+                >
+                  <ion-text>{{column}}</ion-text>
+                </th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let invitee of dataSource.filteredData | slice
+              : 1 + paginator.pageSize * paginator.pageIndex - 1
+              : 1 +
+                  paginator.pageSize * paginator.pageIndex +
+                  paginator.pageSize -
+                  1; index as ind;"
+                class="listMargin"
+                [@listAnimationDesktop]="dataSource.filteredData.length"
+              >
+                <td
+                  *ngFor="let column of 'dashboardPage.checkedInviteesTable' | translate; index as i"
+                >
+                  <ion-text>{{getTableValue(invitee,i)}}</ion-text>
+                </td>
+                <td>
+                  <button mat-icon-button (click)="scanVisitor(invitee)">
+                    <mat-icon
+                      class="qr-scan-icon"
+                      svgIcon="qr-code-scan"
+                      matPrefix
+                    ></mat-icon>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-template>
+
+      <ng-container
+        *ngIf="dataSource.data.length > 0 && dataSource.filteredData.length === 0"
+      >
+        <ion-text
+          >No data matching the filter <b>"{{searchInput.value}}"</b></ion-text
+        >
+      </ng-container>
+
+      <mat-paginator
+        #paginator
+        [length]="dataSource.data.length"
+        [pageSize]="5"
+        [pageSizeOptions]="[5, 10, 20]"
+        aria-label="Select page"
+        [showFirstLastButtons]="true"
+      >
+      </mat-paginator>
+    </div>
+  </div>
+</ion-content>

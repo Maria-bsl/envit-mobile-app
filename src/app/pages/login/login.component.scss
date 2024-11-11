@@ -1,0 +1,45 @@
+.welcome-text {
+  font-size: 24px;
+}
+
+ion-content {
+  //--background: var(--sys-surface);
+
+  #header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 50px;
+
+    h1 {
+      font-weight: 700;
+      font-size: 25px;
+      color: #010100;
+      //margin-bottom: 15%;
+    }
+
+    img {
+      width: 125px;
+      height: 125px;
+      --background: var(--sys-surface);
+    }
+  }
+
+  #form {
+    margin-top: 15px;
+    padding-left: 30px;
+    padding-right: 30px;
+  }
+
+  .bizlogo {
+    text-align: center;
+    margin-top: 30px;
+
+    img {
+      width: 50%;
+      height: 50%;
+      border-radius: 50px;
+      --background: var(--sys-surface);
+    }
+  }
+}

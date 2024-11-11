@@ -1,2 +1,5 @@
 # envit-mobile-app-best-version
- 
+
+### NODE VERSION 20.18.0
+### THE IONIC VERSION IS 7.2.0, THE CAPACITOR IS ALSO 7.2.0
+### THE ANGULAR CLI VERSION IS 18.2.11

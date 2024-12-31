@@ -47,11 +47,9 @@ export class SelectLanguageDialogComponent implements OnInit {
   ) {}
   private createFormGroup() {
     let lang = localStorage.getItem('currentLang');
-    console.log(localStorage);
     this.formGroup = this.fb.group({
       language: this.fb.control(lang, [Validators.required]),
     });
-    console.log(this.formGroup.value);
   }
   ngOnInit() {
     this.createFormGroup();

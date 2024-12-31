@@ -1,0 +1,41 @@
+<ion-content>
+  <div class="w-full h-full flex flex-col relative">
+    <div class="w-full h-[75%]">
+      <img
+        src="assets/img/patterns.jpeg"
+        class="w-full h-full object-cover rounded-bl-[10rem]"
+        alt=""
+        srcset=""
+      />
+    </div>
+    <div class="flex flex-col px-4 py-2">
+      <h1 class="fw-bold text-4xl">Karibu</h1>
+      <div class="flex flex-row items-center justify-between w-full">
+        <button
+          (click)="submit($event, 'en')"
+          mat-stroked-button
+          class="flex flex-row items-center"
+        >
+          <mat-icon svgIcon="gb" matPrefix></mat-icon>
+          <h6 class="text-sm text-black pt-2.5">English</h6>
+        </button>
+        <button
+          (click)="submit($event, 'sw')"
+          mat-stroked-button
+          class="flex flex-row items-center"
+        >
+          <mat-icon svgIcon="tz" matPrefix></mat-icon>
+          <h6 class="text-sm text-black pt-2.5">Kiswahili</h6>
+        </button>
+      </div>
+    </div>
+  </div>
+  <h6
+    class="!text-xs absolute bottom-0 left-1/2 -translate-x-1/2 text-center w-full"
+  >
+    Designed & Developed by
+    <a href="https://bizlogicsolutions.com/" class="underline"
+      >Biz-Logic Solutions Ltd.</a
+    >
+  </h6>
+</ion-content>

@@ -47,6 +47,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'splash',
+    loadComponent: () =>
+      import('./pages/splash-screen-page/splash-screen-page.component').then(
+        (c) => c.SplashScreenPageComponent
+      ),
+  },
+  {
     path: 'tabs',
     loadChildren: () =>
       import('./pages/tabs/tabs.routes').then((m) => m.routes),

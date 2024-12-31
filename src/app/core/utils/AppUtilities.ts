@@ -6,13 +6,7 @@ export class AppUtilities {
   static readonly TOKEN_NAME = 'profanis_auth';
   static readonly TOKEN_user = 'bizlogicj';
   static readonly TOKEN_Cstomer = 'cstID';
-  static async startLoading(controller: LoadingController) {
-    const loading = await controller.create({
-      spinner: 'circles',
-    });
-    await loading.present();
-    return loading;
-  }
+  static readonly EVENT_NAME = 'event_name';
   static showErrorMessage(title: string, message: string) {
     Swal.fire({
       title: title,

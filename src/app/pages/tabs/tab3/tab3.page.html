@@ -85,7 +85,7 @@
                 paginator.pageSize * paginator.pageIndex +
                 paginator.pageSize -
                 1; index as ind;"
-            class="h-50 d-flex flex-column mb-2 rounded px-2 py-1 shadow-sm"
+            class="h-50 flex flex-col divide-y mb-2 rounded px-2 py-1 shadow-sm"
             [class]="ind % 2 === 0 ? 'gray-color' : 'bg-white'"
             #templateList
             [@listAnimationDesktop]="dataSource.filteredData.length"
@@ -94,7 +94,7 @@
           >
             <div
               *ngFor="let column of 'tabs2.visitorsList' | translate; index as i"
-              class="d-flex align-items-center justify-content-between border-b p-1"
+              class="d-flex align-items-center justify-content-between p-1"
             >
               <ion-text class="fw-bold">{{column}}</ion-text>
               <ion-text class="text-right"
@@ -167,7 +167,7 @@
         >
       </ng-container>
 
-      <mat-paginator
+      <!-- <mat-paginator
         #paginator
         [length]="dataSource.data.length"
         [pageSize]="5"
@@ -175,7 +175,15 @@
         aria-label="Select page"
         [showFirstLastButtons]="true"
       >
-      </mat-paginator>
+      </mat-paginator> -->
+      <mat-paginator
+        #paginator
+        [length]="dataSource.filteredData.length"
+        [pageSize]="5"
+        [pageSizeOptions]="[5]"
+        [showFirstLastButtons]="true"
+        class="!bg-[var(--sys-primary)] !text-white"
+      ></mat-paginator>
     </div>
   </div>
 </ion-content>

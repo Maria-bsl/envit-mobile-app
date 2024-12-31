@@ -8,6 +8,12 @@
 // Be sure that you only ever include this mixin once!
 @include mat.core();
 
+@import url("https://fonts.googleapis.com/css2?family=Italianno&family=Montserrat+Alternates:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Parkinsans:wght@300..800&family=Sora:wght@100..800&family=Space+Grotesk:wght@300..700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @font-face {
   font-family: "NunitoSans-Light";
 
@@ -25,7 +31,7 @@ $app-theme: mat.define-theme(
     ),
     typography: (
       use-system-variables: true,
-      brand-family: "NunitoSans-Light",
+      brand-family: "Space Grotesk",
       // 👈 Added
     ),
     density: (
@@ -180,4 +186,42 @@ ion-button {
 
 ion-content {
   --background: var(--sys-surface);
+  //--background: url(assets/img/bg.png);
+  //--background: #232131;
+}
+
+.dialog-loading-panel-class .mat-mdc-dialog-surface {
+  background-color: transparent;
+  width: fit-content !important;
+  height: 200px;
+  width: 200px;
+}
+
+.custom-loader {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 8px solid #0000;
+  border-right-color: var(--sys-primary);
+  position: relative;
+  animation: s4 1s infinite linear;
+}
+.custom-loader:before,
+.custom-loader:after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: inherit;
+  animation: inherit;
+  animation-duration: 2s;
+}
+.custom-loader:after {
+  animation-duration: 4s;
+}
+
+@keyframes s4 {
+  100% {
+    transform: rotate(1turn);
+  }
 }

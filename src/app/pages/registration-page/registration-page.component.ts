@@ -46,6 +46,7 @@ import {
   Platform,
 } from '@ionic/angular/standalone';
 import { arrowBack } from 'ionicons/icons';
+import { LoadingService } from 'src/app/services/loading-service/loading.service';
 
 @Component({
   selector: 'app-registration-page',
@@ -93,7 +94,7 @@ export class RegistrationPageComponent implements OnInit, OnDestroy {
     private translateConfigService: TranslateConfigService,
     private translate: TranslateService,
     private _unsubscriber: UnsubscriberService,
-    private platform: Platform
+    private loadingService: LoadingService
   ) {
     addIcons({ arrowBack });
     this.translateConfigService.getDefaultLanguage();
@@ -143,12 +144,12 @@ export class RegistrationPageComponent implements OnInit, OnDestroy {
       cust_reg_sno: this.cust_reg_sno,
       posted_by: this.posted_id,
     };
-    this.appConfig.openLoading().then((loading) => {
+    this.loadingService.startLoading().then((loading) => {
       this.service
         .CustomerRegistration(bodyparams)
         .pipe(
           this._unsubscriber.takeUntilDestroy,
-          finalize(() => loading.dismiss())
+          finalize(() => this.loadingService.dismiss())
         )
         .subscribe({
           next: (res) => {

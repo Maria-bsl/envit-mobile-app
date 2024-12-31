@@ -37,6 +37,7 @@ import { AppUtilities } from 'src/app/core/utils/AppUtilities';
 import { ServiceService } from 'src/app/services/service.service';
 import { AppConfigService } from 'src/app/services/App-Config/app-config.service';
 import { UnsubscriberService } from 'src/app/services/unsubscriber/unsubscriber.service';
+import { LoadingService } from 'src/app/services/loading-service/loading.service';
 
 @Component({
   selector: 'app-verify-user',
@@ -101,7 +102,8 @@ export class VerifyUserComponent implements OnInit, OnDestroy {
     private service: ServiceService,
     private fb: FormBuilder,
     private translate: TranslateService,
-    private _unsubscribe: UnsubscriberService
+    private _unsubscribe: UnsubscriberService,
+    private loadingService: LoadingService
   ) {}
   ngOnInit() {
     this.eventname = localStorage.getItem(this.event_name)!;
@@ -200,9 +202,9 @@ export class VerifyUserComponent implements OnInit, OnDestroy {
       Number_Of_CheckingIn_Invitees: this.Number_Of_CheckingIn_Invitees.value,
       User_Id: this.userId,
     };
-    this.appConfig.openLoading().then((loading) => {
+    this.loadingService.startLoading().then((loading) => {
       let native = from(this.service.verifyQr(params));
-      native.pipe(finalize(() => loading.dismiss())).subscribe({
+      native.pipe(finalize(() => this.loadingService.dismiss())).subscribe({
         next: (res) => {
           this.verifyresponse = res;
           if (this.verifyresponse.status == 1) {

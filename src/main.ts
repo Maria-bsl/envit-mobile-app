@@ -41,7 +41,6 @@ bootstrapApplication(AppComponent, {
       routes,
       withPreloading(PreloadAllModules),
       withViewTransitions()
-      //withViewTransioitions()
     ),
     provideAnimationsAsync(),
     importProvidersFrom([

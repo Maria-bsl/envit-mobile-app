@@ -55,10 +55,10 @@
         "verifyUser.form.label.selectNumberOfVisitors" | translate
       }}</ion-text>
       <mat-form-field appearance="outline" class="w-100">
-        <mat-label>
-          {{ "verifyUser.panel.numberOfVisitors" | translate }}
-        </mat-label>
-        <mat-select [(ngModel)]="postData.Number_Of_CheckingIn_Invitees">
+        <mat-select
+          [placeholder]="'verifyUser.panel.numberOfVisitors' | translate"
+          [(ngModel)]="postData.Number_Of_CheckingIn_Invitees"
+        >
           <mat-option [value]="no" *ngFor="let no of counts">
             {{ no }}
           </mat-option>

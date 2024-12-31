@@ -70,12 +70,10 @@
   --sys-surface-container-lowest: #ffffff;
   --sys-surface-container-low: #f3f3fa;
   --sys-surface-container: #ededf4;
-  /* --sys-surface-container: #ffffff; */
   --sys-surface-container-high: #e8e7ee;
   --sys-surface-container-highest: #e2e2e9;
   --sys-on-surface: #1a1b20;
   --sys-surface-variant: #e1e2ec;
-  /* --sys-on-surface-variant: #44474f; */
   --sys-on-surface-variant: #acadb1;
   --sys-inverse-surface: #2f3036;
   --sys-inverse-on-surface: #f0f0f7;
@@ -85,8 +83,6 @@
   --sys-scrim: #000000;
   --sys-surface-tint: #465d91;
   --sys-primary: #465d91;
-  /* --sys-primary: #5260ff; */
-  /* --sys-primary: #2d4578; */
   --sys-on-primary: #ffffff;
   --sys-primary-container: #d9e2ff;
   --sys-on-primary-container: #2d4578;
@@ -99,7 +95,6 @@
   --sys-on-tertiary: #ffffff;
   --sys-tertiary-container: #e0e0ff;
   --sys-on-tertiary-container: #3d4279;
-  /* --sys-error: #8f4a4e; */
   --sys-error: #eb445a;
   --sys-on-error: #ffffff;
   --sys-error-container: #ffdada;

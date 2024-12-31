@@ -38,6 +38,7 @@ import { ServiceService } from 'src/app/services/service.service';
 import { UnsubscriberService } from 'src/app/services/unsubscriber/unsubscriber.service';
 import { addIcons } from 'ionicons';
 import { arrowBack } from 'ionicons/icons';
+import { LoadingService } from 'src/app/services/loading-service/loading.service';
 
 @Component({
   selector: 'app-qr-code-page',
@@ -100,8 +101,6 @@ export class QrCodePageComponent implements OnInit {
   cardloop: any;
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  private readonly TOKEN_NAME = 'profanis_auth';
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   private readonly TOKEN_user = 'bizlogicj';
   //ji6sd
   private readonly eventIDs = 'event_id';
@@ -122,7 +121,8 @@ export class QrCodePageComponent implements OnInit {
     private appConfig: AppConfigService,
     private router: Router,
     private route: ActivatedRoute,
-    private tr: TranslateService
+    private tr: TranslateService,
+    private loadingService: LoadingService
   ) {
     addIcons({ arrowBack });
   }
@@ -170,12 +170,9 @@ export class QrCodePageComponent implements OnInit {
             },
           });
         }
-
-        // if (this.cardsize === 1) {
-        //   this.autoVerify();
-        //   //this.postData.Number_Of_CheckingIn_Invitees = '1';
-        //   //this.verify();
-        // }
+        if (Number(this.cardsize) === 1) {
+          this.autoVerify();
+        }
       });
   }
 
@@ -197,12 +194,15 @@ export class QrCodePageComponent implements OnInit {
         this.postData.Number_Of_CheckingIn_Invitees,
       User_Id: this.userId,
     };
-    this.appConfig
-      .openLoading()
+    this.loadingService
+      .startLoading()
       .then((loading) => {
         let native = this.service.verifyQr(params);
         from(native)
-          .pipe(finalize(() => loading.dismiss()))
+          .pipe(
+            this._unsubscriber.takeUntilDestroy,
+            finalize(() => this.loadingService.dismiss())
+          )
           .subscribe({
             next: (res) => {
               this.verifyresponse = res;
@@ -220,7 +220,7 @@ export class QrCodePageComponent implements OnInit {
               }
             },
             error: (err) => {
-              loading.dismiss();
+              this.loadingService.dismiss();
               this.errMsg = err;
               this.resp = this.errMsg.error;
               this.msg = this.resp.message;
@@ -248,12 +248,12 @@ export class QrCodePageComponent implements OnInit {
       Number_Of_CheckingIn_Invitees: '1',
       User_Id: this.userId,
     };
-    this.appConfig.openLoading().then((loading) => {
+    this.loadingService.startLoading().then((loading) => {
       let native = this.service.verifyQr(params);
       from(native)
         .pipe(
           this._unsubscriber.takeUntilDestroy,
-          finalize(() => loading.dismiss())
+          finalize(() => this.loadingService.dismiss())
         )
         .subscribe({
           next: (res) => {
@@ -265,11 +265,10 @@ export class QrCodePageComponent implements OnInit {
             } else {
               AppUtilities.showErrorMessage('', this.verifyresponse.message);
               this.input = '';
-              //this.router.navigate(['tabs/dashboard']);
             }
           },
           error: (err) => {
-            loading.dismiss();
+            this.loadingService.dismiss();
             this.errMsg = err;
             this.resp = this.errMsg.error;
             this.msg = this.resp.message;

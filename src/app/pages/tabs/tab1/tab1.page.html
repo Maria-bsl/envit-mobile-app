@@ -3,63 +3,78 @@
   <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
-  <ion-grid class="event-detail-grid">
-    <ion-row>
-      <ion-col size="12" class="d-inline-flex">
-        <p class="fw-bold mr-1">
-          {{'dashboardPage.topBanner.event' | translate}}:
-        </p>
-        <p class="text-truncate text-uppercase pl-2">{{eventname}}</p>
-      </ion-col>
-    </ion-row>
-    <ion-row>
-      <ion-col size="6">
-        <ng-container *ngIf="chartOptions">
-          <highcharts-chart
-            #chartCol
-            [Highcharts]="Highcharts"
-            [options]="chartOptions"
-            [constructorType]="chartConstructor"
-            [callbackFunction]="chartCallback"
-            [(update)]="updateFromInput"
-            [oneToOne]="true"
+  <div class="flex flex-col w-full mb-8 mt-0">
+    <div class="w-full relative">
+      <div
+        class="absolute left-0 right-0 bottom-0 top-0 w-full h-full bg-black"
+      >
+        <img
+          class="w-full h-full object-cover opacity-30"
+          src="assets/img/toujours-sa-dance.jpg"
+          alt=""
+          srcset=""
+        />
+      </div>
+      <ion-grid class="event-detail-grid relative">
+        <ion-row class="relative h-16">
+          <div
+            class="masai shadow-xl absolute left-0 right-0 bottom-0 top-0 w-full h-full bg-[#3B3566] grid place-items-center"
           >
-          </highcharts-chart>
-        </ng-container>
-      </ion-col>
-      <ion-col size="6" class="d-flex flex-column">
-        <div
-          class="visitor-stats d-flex flex-column align-items-end mb-4 verified-guests"
-        >
-          <ion-text class="mb-2">
-            {{'dashboardPage.topBanner.chart.in' | translate}}
-          </ion-text>
-          <ion-text color="success"> {{guestIn}} </ion-text>
-        </div>
-        <div
-          class="visitor-stats d-flex flex-column align-items-end remain-guests"
-        >
-          <ion-text class="mb-2">
-            {{'dashboardPage.topBanner.chart.remaining' | translate}}
-          </ion-text>
-          <ion-text color="danger"> {{remains}} </ion-text>
-        </div>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
-  <div
-    class="qrClass d-flex flex-column w-100 justify-content-center align-items-center"
-  >
-    <img
-      (click)="startScanning()"
-      src="assets/icon/qr-code.png"
-      alt="centered image"
-      style="margin-top: 20px"
-      class="w-25"
-    />
-    <ion-text class="mt-1">
-      {{'dashboardPage.clickHereToVerifyGuest' | translate}}
-    </ion-text>
+            <a class="text-white uppercase mat-title-large">{{eventname}}</a>
+          </div>
+          <ion-col size="12" class="d-inline-flex"> </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col size="6">
+            <ng-container *ngIf="chartOptions">
+              <highcharts-chart
+                #chartCol
+                [Highcharts]="Highcharts"
+                [options]="chartOptions"
+                [constructorType]="chartConstructor"
+                [callbackFunction]="chartCallback"
+                [(update)]="updateFromInput"
+                [oneToOne]="true"
+                class="w-full h-full relative"
+              >
+              </highcharts-chart>
+            </ng-container>
+          </ion-col>
+          <ion-col size="6" class="d-flex flex-column">
+            <div
+              class="visitor-stats d-flex flex-column align-items-end mb-4 verified-guests"
+            >
+              <ion-text class="mb-2">
+                {{'dashboardPage.topBanner.chart.in' | translate}}
+              </ion-text>
+              <ion-text color="success"> {{guestIn}} </ion-text>
+            </div>
+            <div
+              class="visitor-stats d-flex flex-column align-items-end remain-guests"
+            >
+              <ion-text class="mb-2">
+                {{'dashboardPage.topBanner.chart.remaining' | translate}}
+              </ion-text>
+              <ion-text color="danger"> {{remains}} </ion-text>
+            </div>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </div>
+    <div
+      class="qrClass d-flex flex-column w-100 justify-content-center align-items-center"
+    >
+      <img
+        (click)="startScanning()"
+        src="assets/icon/qr-code.png"
+        alt="centered image"
+        style="margin-top: 20px"
+        class="w-25"
+      />
+      <ion-text class="mt-1">
+        {{'dashboardPage.clickHereToVerifyGuest' | translate}}
+      </ion-text>
+    </div>
   </div>
 
   <div class="last">
@@ -109,13 +124,13 @@
             paginator.pageSize * paginator.pageIndex +
             paginator.pageSize -
             1; index as ind;"
-          class="d-flex flex-column h-50 mb-2 rounded px-2 py-1 shadow-sm list-card"
+          class="flex flex-col divide-y h-50 mb-2 rounded px-2 py-1 shadow-sm list-card"
           [class]="ind % 2 === 0 ? 'gray-color' : 'bg-white'"
           [@listAnimationDesktop]="dataSource.filteredData.length"
         >
           <div
             *ngFor="let column of 'dashboardPage.checkedInviteesTable' | translate; index as i"
-            class="d-flex align-items-center justify-content-between border-b p-1"
+            class="d-flex align-items-center justify-content-between p-1"
           >
             <ion-text class="fw-bold">{{column}}</ion-text>
             <ion-text
@@ -195,9 +210,9 @@
         #paginator
         [length]="dataSource.filteredData.length"
         [pageSize]="5"
-        [pageSizeOptions]="[5, 10, 20]"
-        aria-label="Select page"
+        [pageSizeOptions]="[5]"
         [showFirstLastButtons]="true"
+        class="!bg-[var(--sys-primary)] !text-white"
       ></mat-paginator>
     </div>
   </div>

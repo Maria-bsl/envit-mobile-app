@@ -23,6 +23,7 @@ import { AppUtilities } from 'src/app/core/utils/AppUtilities';
 import { ServiceService } from 'src/app/services/service.service';
 import { AppConfigService } from 'src/app/services/App-Config/app-config.service';
 import { UnsubscriberService } from 'src/app/services/unsubscriber/unsubscriber.service';
+import { LoadingService } from 'src/app/services/loading-service/loading.service';
 
 @Component({
   selector: 'app-verify-code',
@@ -74,7 +75,8 @@ export class VerifyCodeComponent implements OnInit, OnDestroy {
     //private loadingCtrl: LoadingController,
     private appConfig: AppConfigService,
     private translate: TranslateService,
-    private _unsubscriber: UnsubscriberService
+    private _unsubscriber: UnsubscriberService,
+    private loadingService: LoadingService
   ) {}
   postData = {
     qrcode: '',
@@ -88,12 +90,12 @@ export class VerifyCodeComponent implements OnInit, OnDestroy {
   }
   sendQr() {
     const body = { qr_code: this.postData.qrcode, event_id: this.event_id };
-    this.appConfig.openLoading().then((loading) => {
+    this.loadingService.startLoading().then((loading) => {
       const native = from(this.service.sendQr(body));
       native
         .pipe(
           this._unsubscriber.takeUntilDestroy,
-          finalize(() => loading.dismiss())
+          finalize(() => this.loadingService.dismiss())
         )
         .subscribe({
           next: (res) => {
@@ -109,7 +111,7 @@ export class VerifyCodeComponent implements OnInit, OnDestroy {
                 },
               };
               if (this.qrResponse.unchecked_invitee == 1) {
-                this.verify();
+                this.verifyOneVisitor();
               } else {
                 this.router.navigate(
                   ['tabs/tab2/verifyuser'],
@@ -136,10 +138,9 @@ export class VerifyCodeComponent implements OnInit, OnDestroy {
     });
   }
 
-  verify() {
+  verifyOneVisitor() {
     this.userId = localStorage.getItem(this.TOKEN_user);
     this.visitor_id = this.qrResponse.visitor_id;
-    const qrcode = this.qrcode;
 
     const params = {
       event_id: this.event_id,
@@ -147,12 +148,12 @@ export class VerifyCodeComponent implements OnInit, OnDestroy {
       Number_Of_CheckingIn_Invitees: '1',
       User_Id: this.userId,
     };
-    this.appConfig.openLoading().then((loading) => {
+    this.loadingService.startLoading().then((loading) => {
       let native = from(this.service.verifyQr(params));
       native
         .pipe(
           this._unsubscriber.takeUntilDestroy,
-          finalize(() => loading.dismiss())
+          finalize(() => this.loadingService.dismiss())
         )
         .subscribe({
           next: (res) => {

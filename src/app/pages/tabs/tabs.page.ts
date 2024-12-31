@@ -6,7 +6,7 @@ import {
   inject,
   OnInit,
 } from '@angular/core';
-import { RouterLink, RouterModule } from '@angular/router';
+import { RouterLink, RouterLinkActive, RouterModule } from '@angular/router';
 import {
   IonTabs,
   IonTabBar,
@@ -35,6 +35,7 @@ import { createTranslateLoader } from 'src/main';
     IonIcon,
     IonLabel,
     RouterLink,
+    RouterLinkActive,
     TranslateModule,
   ],
 })

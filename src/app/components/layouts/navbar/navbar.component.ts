@@ -15,9 +15,10 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { ThemeManagerService } from 'src/app/services/theme-manager/them-manager.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AppConfigService } from 'src/app/services/App-Config/app-config.service';
-import { finalize, zip } from 'rxjs';
+import { finalize, from, switchMap, tap, timer, zip } from 'rxjs';
 import { UnsubscriberService } from 'src/app/services/unsubscriber/unsubscriber.service';
 import { MatRipple } from '@angular/material/core';
+import { LoadingService } from 'src/app/services/loading-service/loading.service';
 @Component({
   selector: 'app-navbar',
   templateUrl: './navbar.component.html',
@@ -50,7 +51,8 @@ export class NavbarComponent implements OnInit {
     private sanitizer: DomSanitizer,
     private themeManager: ThemeManagerService,
     private _snackbar: MatSnackBar,
-    private _unsubscriber: UnsubscriberService
+    private _unsubscriber: UnsubscriberService,
+    private loadingService: LoadingService
   ) {
     addIcons({ personCircle });
     this.registerIcons();
@@ -70,9 +72,10 @@ export class NavbarComponent implements OnInit {
   }
   private changeLanguage(code: string) {
     if (this.language !== code) {
-      this.appConfig.openLoading().then((loading) => {
+      this.loadingService.startLoading().then((loading) => {
         this.language = code;
         this.translateConfigService.setLanguage(code);
+        localStorage.setItem('currentLang', code);
         let successMessage$ = this.translate.get(
           'navbar.selectLanguage.successChange'
         );
@@ -81,12 +84,15 @@ export class NavbarComponent implements OnInit {
         observables
           .pipe(
             this._unsubscriber.takeUntilDestroy,
-            finalize(() => loading.dismiss())
+            finalize(() => this.loadingService.dismiss())
           )
           .subscribe({
             next: (results) => {
               let [message, action] = results;
               let snackbar = this._snackbar.open(message, action);
+              setTimeout(() => {
+                snackbar.dismiss();
+              }, 5000);
               this.languageChanged.emit();
             },
           });
@@ -100,7 +106,7 @@ export class NavbarComponent implements OnInit {
   switchEvent() {
     this.router.navigate(['switch']);
   }
-  openChangePassword() {
+  openChangeLanguage() {
     let dialogRef = this.dialog.open(SelectLanguageDialogComponent, {
       data: {
         language: this.language,
@@ -121,13 +127,15 @@ export class NavbarComponent implements OnInit {
     }
   }
   logout() {
-    this.appConfig.openLoading().then((loading) => {
+    this.loadingService.startLoading().then((loading) => {
       localStorage.clear();
       setTimeout(() => {
-        loading.dismiss();
-        this.router.navigate(['login']).then((c) => {
-          location.reload();
-        });
+        //loading.dismiss();
+        this.loadingService.dismiss();
+        this.router.navigate(['login']);
+        // this.router.navigate(['login']).then((c) => {
+        //   location.reload();
+        // });
       }, 1500);
     });
   }

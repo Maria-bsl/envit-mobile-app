@@ -34,15 +34,15 @@ import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Router } from '@angular/router';
-import { Subscription, finalize } from 'rxjs';
+import { Subscription, finalize, switchMap, tap } from 'rxjs';
 import { TranslateConfigService } from '../../translate-config.service';
-import { EventDetailsResponse } from '../../core/interfaces/EventDetailsResponse';
 import { AppUtilities } from '../../core/utils/AppUtilities';
-import { LoginResponse } from '../../core/interfaces/LoginResponse';
+import { LoginResponse } from '../../core/responses/LoginResponse';
 import { ServiceService } from '../../services/service.service';
-import { LoginPayload } from '../../core/interfaces/login-payload';
+import { FLoginPayload } from '../../core/forms/f-login-payload';
 import { UnsubscriberService } from '../../services/unsubscriber/unsubscriber.service';
 import { AppConfigService } from 'src/app/services/App-Config/app-config.service';
+import { LoadingService } from 'src/app/services/loading-service/loading.service';
 
 @Component({
   selector: 'app-login',
@@ -68,15 +68,12 @@ import { AppConfigService } from 'src/app/services/App-Config/app-config.service
     IonButton,
   ],
 })
-export class LoginComponent implements OnInit, OnDestroy, AfterContentInit {
+export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
-  subscriptions: Subscription[] = [];
   language: any;
   @ViewChild('ionLoading') ionLoading!: IonLoading;
   constructor(
     private fb: FormBuilder,
-    private loadingCtrl: LoadingController,
-    private dialog: MatDialog,
     private router: Router,
     private service: ServiceService,
     private iconRegistry: MatIconRegistry,
@@ -84,7 +81,8 @@ export class LoginComponent implements OnInit, OnDestroy, AfterContentInit {
     private translateConfigService: TranslateConfigService,
     private translate: TranslateService,
     private _unsubscriber: UnsubscriberService,
-    private appConfig: AppConfigService
+    private appConfig: AppConfigService,
+    private loadingService: LoadingService
   ) {
     this.registerIcons(iconRegistry, sanitizer);
     this.translateConfigService.getDefaultLanguage();
@@ -134,96 +132,51 @@ export class LoginComponent implements OnInit, OnDestroy, AfterContentInit {
     }
   }
   onClickLogin() {
-    if (this.loginForm.valid) {
-      let form = {
-        ...this.loginForm.value,
-        mobile_number: '0' + this.mobile_number.value,
-      } as LoginPayload;
-      this.appConfig
-        .startLoading(this.ionLoading)
+    const erroneousRes = async (err: any) => {
+      (await this.loadingService.isLoading()) && this.loadingService.dismiss();
+      this.translate
+        .get('loginPage.loginForm.errors.loginFailed')
         .pipe(this._unsubscriber.takeUntilDestroy)
         .subscribe({
-          next: () => {
-            this.service
-              .loginFunc(form)
-              .pipe(
-                this._unsubscriber.takeUntilDestroy,
-                finalize(() => this.appConfig.closeLoading(this.ionLoading))
-              )
-              .subscribe({
-                next: (res: any) => {
-                  this.parseLoginResponse(res);
-                },
-                error: (err) => {
-                  this.appConfig.closeLoading(this.ionLoading);
-                  this.translate
-                    .get('loginPage.loginForm.errors.loginFailed')
-                    .pipe(this._unsubscriber.takeUntilDestroy)
-                    .subscribe({
-                      next: (message) => {
-                        AppUtilities.showErrorMessage(
-                          message,
-                          err.error.message
-                        );
-                        this.router.navigate(['login']);
-                      },
-                    });
-                },
-              });
+          next: (message) => {
+            AppUtilities.showErrorMessage('', err.error.message);
+            this.router.navigate(['/login']);
           },
         });
-      // AppUtilities.startLoading(this.loadingCtrl)
-      //   .then((loading) => {
-      //     this.service
-      //       .loginFunc(form)
-      //       .pipe(
-      //         this._unsubscriber.takeUntilDestroy,
-      //         finalize(() => loading.dismiss())
-      //       )
-      //       .subscribe({
-      //         next: (res: any) => {
-      //           this.parseLoginResponse(res);
-      //         },
-      //         error: (err) => {
-      //           loading.dismiss();
-      //           this.translate
-      //             .get('loginPage.loginForm.errors.loginFailed')
-      //             .pipe(this._unsubscriber.takeUntilDestroy)
-      //             .subscribe({
-      //               next: (message) => {
-      //                 AppUtilities.showErrorMessage(message, err.error.message);
-      //                 this.router.navigate(['login']);
-      //               },
-      //             });
-      //         },
-      //       });
-      //   })
-      //   .catch((err) => {
-      //     throw err;
-      //   });
+    };
+    const login = () => {
+      return this.service.loginFunc({
+        ...this.loginForm.value,
+        mobile_number: '0' + this.mobile_number.value,
+      } as FLoginPayload);
+    };
+    if (this.loginForm.valid) {
+      this.loadingService
+        .startLoading()
+        .then((loading) => {
+          login()
+            .pipe(
+              this._unsubscriber.takeUntilDestroy,
+              finalize(() => this.loadingService.dismiss())
+            )
+            .subscribe({
+              next: (res) => this.parseLoginResponse(res),
+              error: (err) => erroneousRes(err),
+            });
+        })
+        .catch((err) => console.error(err));
     } else {
       this.loginForm.markAllAsTouched();
     }
   }
-
-  // openDialog(eventDetails: EventDetailsResponse[]) {
-  //   const dialogRef = this.dialog.open(EventselectionPage, {
-  //     data: eventDetails,
-  //     disableClose: true,
-  //   });
-  // }
-  resetpage() {
+  resetPage() {
     this.router.navigate(['recoverpwd']);
   }
-  tryevent() {
+  tryEvent() {
     this.router.navigate(['pricing']);
   }
   ngOnInit() {
-    localStorage.clear();
-  }
-  ngAfterContentInit(): void {}
-  ngOnDestroy(): void {
-    this.subscriptions.forEach((s) => s.unsubscribe());
+    //localStorage.clear();
   }
   get mobile_number() {
     return this.loginForm.get('mobile_number') as FormControl;

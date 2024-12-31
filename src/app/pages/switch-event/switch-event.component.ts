@@ -10,9 +10,9 @@ import { IonicModule, LoadingController } from '@ionic/angular';
 import { NavbarComponent } from 'src/app/components/layouts/navbar/navbar.component';
 import { Router, NavigationExtras } from '@angular/router';
 import { Subscription, finalize } from 'rxjs';
-import { EventDetailsResponse } from 'src/app/core/interfaces/EventDetailsResponse';
+//import { EventDetailsResponse } from 'src/app/core/interfaces/EventDetailsResponse';
 import { AppUtilities } from 'src/app/core/utils/AppUtilities';
-import { EventChoice } from 'src/app/services/params/eventschoice';
+//import { EventChoice } from 'src/app/services/params/eventschoice';
 import { ServiceService } from 'src/app/services/service.service';
 import {
   IonLoading,
@@ -22,6 +22,9 @@ import {
 } from '@ionic/angular/standalone';
 import { AppConfigService } from 'src/app/services/App-Config/app-config.service';
 import { UnsubscriberService } from 'src/app/services/unsubscriber/unsubscriber.service';
+import { EventDetailsResponse } from 'src/app/core/responses/LoginResponse';
+import { FEventChoice } from 'src/app/core/forms/f-events-choice';
+import { LoadingService } from 'src/app/services/loading-service/loading.service';
 
 @Component({
   selector: 'app-switch-event',
@@ -54,7 +57,8 @@ export class SwitchEventComponent implements OnInit, OnDestroy {
     private controller: LoadingController,
     private service: ServiceService,
     private appConfig: AppConfigService,
-    private _unsubscriber: UnsubscriberService
+    private _unsubscriber: UnsubscriberService,
+    private loadingService: LoadingService
   ) {}
   ngOnInit() {
     this.eventsList = JSON.parse(
@@ -107,38 +111,64 @@ export class SwitchEventComponent implements OnInit, OnDestroy {
       const params = {
         mobile_number: JSON.parse(tokenName).mobile,
         event_id: selected.event_id.toString(),
-      } as EventChoice;
-      this.appConfig
-        .startLoading(this.ionLoading)
-        .pipe(this._unsubscriber.takeUntilDestroy)
-        .subscribe({
-          next: () => {
-            this.service
-              .EventChoices(params)
-              .pipe(
-                finalize(() => this.appConfig.closeLoading(this.ionLoading))
-              )
-              .subscribe({
-                next: (result: any) => {
-                  localStorage.setItem(
-                    AppUtilities.TOKEN_user,
-                    result.user_id.toString()
-                  );
-                  localStorage.setItem(
-                    AppUtilities.TOKEN_Cstomer,
-                    result.customer_admin_id.toString()
-                  );
-                },
-                error: (error) => {
-                  this.appConfig.closeLoading(this.ionLoading);
-                  throw error;
-                },
-                complete: () => {
-                  this.openSelectedEvent(selected);
-                },
-              });
-          },
-        });
+      } as FEventChoice;
+      this.loadingService.startLoading().then(() => {
+        this.service
+          .EventChoices(params)
+          .pipe(
+            this._unsubscriber.takeUntilDestroy,
+            finalize(() => this.loadingService.dismiss())
+          )
+          .subscribe({
+            next: (result: any) => {
+              localStorage.setItem(
+                AppUtilities.TOKEN_user,
+                result.user_id.toString()
+              );
+              localStorage.setItem(
+                AppUtilities.TOKEN_Cstomer,
+                result.customer_admin_id.toString()
+              );
+            },
+            error: (error) => {
+              throw error;
+            },
+            complete: () => {
+              this.openSelectedEvent(selected);
+            },
+          });
+      });
+      // this.loadingService
+      //   .startLoading()
+      //   .pipe(this._unsubscriber.takeUntilDestroy)
+      //   .subscribe({
+      //     next: () => {
+      //       this.service
+      //         .EventChoices(params)
+      //         .pipe(
+      //           finalize(() => this.loadingService.dismiss())
+      //         )
+      //         .subscribe({
+      //           next: (result: any) => {
+      //             localStorage.setItem(
+      //               AppUtilities.TOKEN_user,
+      //               result.user_id.toString()
+      //             );
+      //             localStorage.setItem(
+      //               AppUtilities.TOKEN_Cstomer,
+      //               result.customer_admin_id.toString()
+      //             );
+      //           },
+      //           error: (error) => {
+      //             this.appConfig.closeLoading(this.ionLoading);
+      //             throw error;
+      //           },
+      //           complete: () => {
+      //             this.openSelectedEvent(selected);
+      //           },
+      //         });
+      //     },
+      //   });
     }
   }
 }

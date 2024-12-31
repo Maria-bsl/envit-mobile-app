@@ -4,10 +4,6 @@
     <div id="header">
       <img src="assets/icon/E-nvit.jpg" />
       <ion-text class="mat-display-medium">E - n v i t</ion-text>
-      <!-- <ion-text class="mat-headline-small">
-        {{ "loginPage.signInMessage" | translate }}
-      </ion-text> -->
-      <!-- <hr class="line" /> -->
     </div>
     <form
       (ngSubmit)="onClickLogin()"
@@ -28,7 +24,6 @@
             [formControl]="mobile_number"
             name="mobile_number"
             autocomplete="off"
-            required
           />
           <mat-error>
             <ng-container *ngIf="mobile_number.hasError('required')">
@@ -52,7 +47,6 @@
             [formControl]="password"
             name="password"
             autocomplete="off"
-            required
           />
           <mat-error>
             {{ "defaults.errors.pleaseFill" | translate }}
@@ -61,7 +55,7 @@
       </div>
       <div class="d-flex align-items-center justify-content-end">
         <button
-          (click)="resetpage()"
+          (click)="resetPage()"
           mat-button
           type="button"
           color="primary"
@@ -75,8 +69,8 @@
       </ion-button>
     </form>
 
-    <div class="bizlogo">
-      <img src="assets/icon/Biz-Logic.png" />
+    <div class="w-full mt-8 grid place-items-center">
+      <img src="assets/icon/Biz-Logic.png" class="w-40" />
     </div>
   </div>
 </ion-content>

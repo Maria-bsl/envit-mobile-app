@@ -54,6 +54,7 @@ import {
 import { addIcons } from 'ionicons';
 import { addOutline } from 'ionicons/icons';
 import { MatRippleModule } from '@angular/material/core';
+import { LoadingService } from 'src/app/services/loading-service/loading.service';
 
 @Component({
   selector: 'app-tab3',
@@ -130,7 +131,8 @@ export class Tab3Page implements OnInit, OnDestroy, AfterViewInit {
     private animationCtrl: AnimationController,
     private iconRegistry: MatIconRegistry,
     private sanitizer: DomSanitizer,
-    private _unsubsriber: UnsubscriberService
+    private _unsubsriber: UnsubscriberService,
+    private loadingService: LoadingService
   ) {
     addIcons({ addOutline });
   }
@@ -211,12 +213,12 @@ export class Tab3Page implements OnInit, OnDestroy, AfterViewInit {
     this.eventname = localStorage.getItem(this.event_name)!;
     this.event_id = localStorage.getItem(this.eventIDs);
     const body = { event_id: this.event_id };
-    this.appConfig.openLoading().then((loading) => {
+    this.loadingService.startLoading().then((loading) => {
       let native = from(this.service.getAllinvitee(body.event_id));
       native
         .pipe(
           this._unsubsriber.takeUntilDestroy,
-          finalize(() => loading.dismiss())
+          finalize(() => this.loadingService.dismiss())
         )
         .subscribe({
           next: (res) => {
@@ -244,12 +246,12 @@ export class Tab3Page implements OnInit, OnDestroy, AfterViewInit {
   }
   sendQr(qrcode: any) {
     const body = { qr_code: qrcode, event_id: this.event_id };
-    this.appConfig.openLoading().then((loading) => {
+    this.loadingService.startLoading().then((loading) => {
       let native = from(this.service.sendQr(body));
       native
         .pipe(
           this._unsubsriber.takeUntilDestroy,
-          finalize(() => loading.dismiss())
+          finalize(() => this.loadingService.dismiss())
         )
         .subscribe({
           next: (res) => {

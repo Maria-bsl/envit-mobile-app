@@ -48,10 +48,10 @@
             "verifyUser.form.label.selectNumberOfVisitors" | translate
           }}</ion-text>
           <mat-form-field appearance="outline" class="w-100">
-            <mat-label>
-              {{ "verifyUser.panel.numberOfVisitors" | translate }}
-            </mat-label>
-            <mat-select [formControl]="Number_Of_CheckingIn_Invitees">
+            <mat-select
+              [placeholder]="'verifyUser.panel.numberOfVisitors' | translate"
+              [formControl]="Number_Of_CheckingIn_Invitees"
+            >
               <mat-option disabled selected>{{
                 "verifyUser.form.label.selectNumberOfVisitors" | translate
               }}</mat-option>

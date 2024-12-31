@@ -33,6 +33,7 @@ import {
   IonIcon,
   IonContent,
 } from '@ionic/angular/standalone';
+import { LoadingService } from 'src/app/services/loading-service/loading.service';
 
 @Component({
   selector: 'app-change-password',
@@ -74,7 +75,8 @@ export class ChangePasswordComponent implements OnInit {
     private location: Location,
     private translateConfigService: TranslateConfigService,
     private _unsubscriber: UnsubscriberService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private loadingService: LoadingService
   ) {
     addIcons({ arrowBack });
     this.translateConfigService.getDefaultLanguage();
@@ -118,13 +120,13 @@ export class ChangePasswordComponent implements OnInit {
       this.postData.markAllAsTouched();
       return;
     }
-    this.appConfig.openLoading().then((loading) => {
+    this.loadingService.startLoading().then((loading) => {
       let body = this.getChangePasswordPayload(this.postData.value);
       let native = this.service.ChangePswd(body);
       native
         .pipe(
           this._unsubscriber.takeUntilDestroy,
-          finalize(() => loading.dismiss())
+          finalize(() => this.loadingService.dismiss())
         )
         .subscribe({
           next: (res) => {

@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Subject } from 'rxjs';
-import { EventChoice } from './params/eventschoice';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { catchError, delay, Observable, retry, Subject } from 'rxjs';
+import { FEventChoice } from '../core/forms/f-events-choice';
 import { QrCode } from './params/qrcode';
 import { QrVerify } from './params/verify';
+import { LoginResponse } from '../core/responses/LoginResponse';
 
 @Injectable({
   providedIn: 'root',
@@ -17,21 +18,37 @@ export class ServiceService {
   get refreshNeeded$() {
     return this._refreshNeeded$;
   }
-  // eslint-disable-next-line @typescript-eslint/member-ordering
   base_urls = 'https://bizlogicsolutions.co.in:99';
-  // base_urls = "http://192.168.100.50:99";
   constructor(private https: HttpClient) {}
-
-  loginFunc(login: any) {
-    return this.https.post(this.base_urls + '/api/login', login);
+  private performPost<T>(url: string, body: T, headers: any) {
+    const createHeaders = (headers: Map<string, string>) => {
+      let heads = new HttpHeaders();
+      for (let [key, value] of Object.entries(headers)) {
+        heads = heads.set(key, value);
+      }
+      return heads;
+    };
+    return this.https
+      .post(url, body, {
+        headers: createHeaders(headers),
+      })
+      .pipe(
+        retry(3),
+        delay(500),
+        catchError((err: any) => {
+          throw err;
+        })
+      ) as Observable<any>;
   }
 
-  EventChoices(choice: EventChoice) {
-    return this.https.post(
-      this.base_urls + '/api/event-of-choice',
-      choice
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-    );
+  loginFunc(body: any): Observable<LoginResponse> {
+    const url = `${this.base_urls}/api/login`;
+    return this.performPost(url, body, {});
+  }
+
+  EventChoices(body: FEventChoice) {
+    const url = `${this.base_urls}/api/event-of-choice`;
+    return this.performPost(url, body, {});
   }
   sendQr(qr: QrCode) {
     try {

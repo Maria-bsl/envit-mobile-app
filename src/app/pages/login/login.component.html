@@ -40,14 +40,38 @@
           {{ "loginPage.loginForm.labels.password" | translate }}
         </ion-text>
         <mat-form-field appearance="outline" style="width: 100%">
+          <mat-icon svgIcon="lock" matPrefix></mat-icon>
           <input
+            #passwordInput
             matInput
             placeholder="Enter Password"
             type="password"
             [formControl]="password"
             name="password"
             autocomplete="off"
+            (paste)="$event.preventDefault()"
+            (copy)="$event.preventDefault()"
+            (cut)="$event.preventDefault()"
           />
+          @if (password.value.length > 0) {
+          <button
+            [@inOutAnimation]
+            matSuffix
+            mat-icon-button
+            type="button"
+            (click)="
+              passwordInput.type === 'password'
+                ? (passwordInput.type = 'text')
+                : (passwordInput.type = 'password')
+            "
+          >
+            <mat-icon
+              [svgIcon]="passwordInput.type === 'password' ? 'eye' : 'eye-off'"
+              matPrefix
+              class="!text-black"
+            ></mat-icon>
+          </button>
+          }
           <mat-error>
             {{ "defaults.errors.pleaseFill" | translate }}
           </mat-error>

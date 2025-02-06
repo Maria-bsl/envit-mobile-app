@@ -16,7 +16,7 @@
   <ion-card>
     <ion-card-content>
       <ion-item>
-        <ion-col size="4">Invitee:</ion-col>
+        <ion-col size="4">{{ "qrpage.invitee" | translate }}:</ion-col>
         <ion-col size="8">
           <p style="text-align: right; font-weight: 600; margin-top: 15px">
             {{ inviteeN }}
@@ -24,7 +24,7 @@
         </ion-col>
       </ion-item>
       <ion-item>
-        <ion-col size="4">Card Size: </ion-col>
+        <ion-col size="4">{{ "qrpage.cardSize" | translate }}: </ion-col>
         <ion-col size="8">
           <p style="text-align: right; font-weight: 600; margin-top: 15px">
             {{ cardsize }}
@@ -32,18 +32,10 @@
         </ion-col>
       </ion-item>
       <ion-item>
-        <ion-col size="4">Code:</ion-col>
+        <ion-col size="4">{{ "qrpage.code" | translate }}:</ion-col>
         <ion-col size="8">
           <p style="text-align: right; font-weight: 600; margin-top: 15px">
             {{ qrcode }}
-          </p>
-        </ion-col>
-      </ion-item>
-      <ion-item>
-        <ion-col size="4">Venue:</ion-col>
-        <ion-col size="8">
-          <p style="text-align: right; font-weight: 600; margin-top: 15px">
-            {{ venue }}
           </p>
         </ion-col>
       </ion-item>
@@ -66,5 +58,11 @@
       </mat-form-field>
     </div>
   </ion-item>
-  <ion-button class="mt-4" expand="block" (click)="verify()">verify</ion-button>
+  <ion-button
+    [disabled]="!postData.Number_Of_CheckingIn_Invitees"
+    class="mt-4"
+    expand="block"
+    (click)="verify()"
+    >{{ "qrpage.verifyCard" | translate }}</ion-button
+  >
 </ion-content>

@@ -36,7 +36,7 @@ import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NavbarComponent } from 'src/app/components/layouts/navbar/navbar.component';
 import { MatTableDataSource } from '@angular/material/table';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -55,6 +55,7 @@ import { addIcons } from 'ionicons';
 import { addOutline } from 'ionicons/icons';
 import { MatRippleModule } from '@angular/material/core';
 import { LoadingService } from 'src/app/services/loading-service/loading.service';
+import { SharedService } from 'src/app/services/shared-service/shared.service';
 
 @Component({
   selector: 'app-tab3',
@@ -76,16 +77,7 @@ import { LoadingService } from 'src/app/services/loading-service/loading.service
     MatInputModule,
     MatButtonModule,
     TranslateModule,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
     IonContent,
-    IonInput,
-    IonGrid,
-    IonRow,
-    IonCol,
-    IonItem,
-    IonLabel,
     IonButton,
     IonText,
     IonSearchbar,
@@ -132,7 +124,9 @@ export class Tab3Page implements OnInit, OnDestroy, AfterViewInit {
     private iconRegistry: MatIconRegistry,
     private sanitizer: DomSanitizer,
     private _unsubsriber: UnsubscriberService,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
+    private sharedService: SharedService,
+    private tr: TranslateService
   ) {
     addIcons({ addOutline });
   }
@@ -185,10 +179,19 @@ export class Tab3Page implements OnInit, OnDestroy, AfterViewInit {
       })
     );
   }
+  private addedVisitorHandler() {
+    this.sharedService.addedVisitor$
+      .pipe(this._unsubsriber.takeUntilDestroy)
+      .subscribe({
+        next: () => this.requestInviteesList(),
+        error: (err) => console.error(err),
+      });
+  }
   ngOnInit() {
     this.registerIcons();
     this.requestInviteesList();
     this.searchInputChanged();
+    this.addedVisitorHandler();
   }
   ngAfterViewInit(): void {
     this.initListAnimation();
@@ -210,8 +213,12 @@ export class Tab3Page implements OnInit, OnDestroy, AfterViewInit {
     }
   }
   requestInviteesList() {
-    this.eventname = localStorage.getItem(this.event_name)!;
-    this.event_id = localStorage.getItem(this.eventIDs);
+    this.eventname = this.appConfig.getItemFromSessionStorage(
+      AppUtilities.EVENT_NAME
+    );
+    this.event_id = this.appConfig.getItemFromSessionStorage(
+      AppUtilities.EVENT_ID
+    );
     const body = { event_id: this.event_id };
     this.loadingService.startLoading().then((loading) => {
       let native = from(this.service.getAllinvitee(body.event_id));
@@ -235,14 +242,19 @@ export class Tab3Page implements OnInit, OnDestroy, AfterViewInit {
     this.subscriptions.forEach((s) => s.unsubscribe());
   }
   scanVisitor(invitee: any) {
-    let swal = AppUtilities.confirmAction(
-      `Are you sure you want to verify ${invitee.visitor_name}.`
-    );
-    swal.then((result) => {
-      if (result.isConfirmed) {
-        this.sendQr(invitee.qr_code);
-      }
-    });
+    const openSwal = (message: string, visitor_name: string) => {
+      message = message.replace('{{}}', visitor_name);
+      AppUtilities.confirmAction(message).then((result) => {
+        result.isConfirmed && this.sendQr(invitee.qr_code);
+      });
+    };
+    this.tr
+      .get('tab3.sureRegisterVisitor')
+      .pipe(this._unsubsriber.takeUntilDestroy)
+      .subscribe({
+        next: (message) => openSwal(message, invitee.visitor_name),
+        error: (err) => console.error(err),
+      });
   }
   sendQr(qrcode: any) {
     const body = { qr_code: qrcode, event_id: this.event_id };
@@ -303,10 +315,6 @@ export class Tab3Page implements OnInit, OnDestroy, AfterViewInit {
   }
   changepass() {
     this.router.navigate(['changepwd']);
-  }
-  logout() {
-    localStorage.clear();
-    this.router.navigate(['login']);
   }
   switchEvent() {
     this.router.navigate(['switch']);

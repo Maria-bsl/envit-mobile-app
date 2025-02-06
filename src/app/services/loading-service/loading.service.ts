@@ -30,18 +30,21 @@ export class LoadingService {
       });
   }
   async startLoading() {
-    // let dialogRef = this._dialog.open(LoadingDialogComponent, {
-    //   panelClass: 'dialog-loading-panel-class',
-    //   disableClose: true,
-    // });
-    // this.loading$.next(dialogRef);
-    // return firstValueFrom(this.loading$.asObservable());
     let isLoading = await this.isLoading();
     if (isLoading) this.stopLoading();
     let dialogRef = this._dialog.open(LoadingDialogComponent, {
       panelClass: 'dialog-loading-panel-class',
       disableClose: true,
     });
+    const LIMIT = 30000;
+    setTimeout(() => {
+      this.isLoading()
+        .then((isLoading) => isLoading && this.dismiss())
+        .catch((err) => {
+          console.error(err);
+          this.dismiss();
+        });
+    }, LIMIT);
     this.loading$.next(dialogRef);
     return firstValueFrom(this.loading$.asObservable());
   }

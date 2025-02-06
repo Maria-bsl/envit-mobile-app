@@ -27,6 +27,7 @@ import {
   IonText,
   IonButton,
 } from '@ionic/angular/standalone';
+import { LoadingService } from 'src/app/services/loading-service/loading.service';
 
 @Component({
   selector: 'app-forgot-password',
@@ -61,7 +62,8 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
     private appConfig: AppConfigService,
     private _unsubscriber: UnsubscriberService,
     private translateConfigService: TranslateConfigService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private loadingService: LoadingService
   ) {
     this.translateConfigService.getDefaultLanguage();
     this.language = this.translateConfigService.getCurrentLang();
@@ -81,37 +83,34 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
     this.subscriptions.forEach((s) => s.unsubscribe());
   }
   private async forgetpwd(mobileNumber: string) {
-    mobileNumber = '0' + mobileNumber;
-    this.appConfig
-      .startLoading(this.ionLoading)
-      .pipe(this._unsubscriber.takeUntilDestroy)
-      .subscribe({
-        next: () => {
-          this.service
-            .Forgetpwd(mobileNumber)
-            .pipe(finalize(() => this.appConfig.closeLoading(this.ionLoading)))
-            .subscribe({
-              next: (res: any) => {
-                if (res.status == 1) {
-                  AppUtilities.showSuccessMessage(
-                    '',
-                    'Credentials have been sent to your mobile number.'
-                  );
-                  this.router.navigate(['login']);
-                } else {
-                  AppUtilities.showErrorMessage('', 'Invalid mobile number');
-                }
-              },
-              error: (err) => {
-                this.appConfig.closeLoading(this.ionLoading);
-                AppUtilities.showErrorMessage(
-                  '',
-                  'An error occurred. Please try again.'
-                );
-              },
-            });
-        },
-      });
+    const success = (res: any) => {
+      if (res.status == 1) {
+        AppUtilities.showSuccessMessage(
+          '',
+          'Credentials have been sent to your mobile number.'
+        );
+        this.router.navigate(['login']);
+      } else {
+        AppUtilities.showErrorMessage('', 'Invalid mobile number');
+      }
+    };
+    const error = (err: any) => {
+      this.appConfig.closeLoading(this.ionLoading);
+      AppUtilities.showErrorMessage('', 'An error occurred. Please try again.');
+      console.error(err);
+    };
+    this.loadingService
+      .startLoading()
+      .then((loading) => {
+        this.service
+          .Forgetpwd(`0${mobileNumber}`)
+          .pipe(finalize(() => this.loadingService.dismiss()))
+          .subscribe({
+            next: (res: any) => success(res),
+            error: (err) => error(err),
+          });
+      })
+      .catch((err) => console.error(err));
   }
   loginpage() {
     this.router.navigate(['login']);

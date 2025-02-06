@@ -1,15 +1,20 @@
 import { Routes } from '@angular/router';
+import {
+  loginPageLanguageGuard,
+  selectLanguagePageGuard,
+} from './core/guards/logged-in-guard';
 
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'login',
+    redirectTo: 'splash',
     pathMatch: 'full',
   },
   {
     path: 'login',
     loadComponent: () =>
       import('./pages/login/login.component').then((c) => c.LoginComponent),
+    canActivate: [loginPageLanguageGuard],
   },
   {
     path: 'recoverpwd',
@@ -52,6 +57,7 @@ export const routes: Routes = [
       import('./pages/splash-screen-page/splash-screen-page.component').then(
         (c) => c.SplashScreenPageComponent
       ),
+    canActivate: [selectLanguagePageGuard],
   },
   {
     path: 'tabs',

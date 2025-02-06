@@ -3,28 +3,17 @@
   <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
-  <div class="flex flex-col w-full mb-8 mt-0">
-    <div class="w-full relative">
-      <div
-        class="absolute left-0 right-0 bottom-0 top-0 w-full h-full bg-black"
+  <div
+    class="flex flex-col w-full h-[340px] mb-8 mt-0 bg-[var(--sys-surface-container-lowest)] relative"
+  >
+    <div class="w-full h-full flex flex-col p-4">
+      <h6
+        class="text-[var(--sys-shadow)] !font-semibold uppercase mat-title-large"
       >
-        <img
-          class="w-full h-full object-cover opacity-30"
-          src="assets/img/toujours-sa-dance.jpg"
-          alt=""
-          srcset=""
-        />
-      </div>
-      <ion-grid class="event-detail-grid relative">
-        <ion-row class="relative h-16">
-          <div
-            class="masai shadow-xl absolute left-0 right-0 bottom-0 top-0 w-full h-full bg-[#3B3566] grid place-items-center"
-          >
-            <a class="text-white uppercase mat-title-large">{{eventname}}</a>
-          </div>
-          <ion-col size="12" class="d-inline-flex"> </ion-col>
-        </ion-row>
-        <ion-row>
+        {{eventname}}
+      </h6>
+      <ion-grid class="!w-full">
+        <ion-row class="!w-full !h-24">
           <ion-col size="6">
             <ng-container *ngIf="chartOptions">
               <highcharts-chart
@@ -40,43 +29,47 @@
               </highcharts-chart>
             </ng-container>
           </ion-col>
-          <ion-col size="6" class="d-flex flex-column">
-            <div
-              class="visitor-stats d-flex flex-column align-items-end mb-4 verified-guests"
-            >
-              <ion-text class="mb-2">
+          <ion-col size="6" class="flex flex-col relative w-full">
+            <div class="flex flex-col w-full">
+              <ion-text>
                 {{'dashboardPage.topBanner.chart.in' | translate}}
               </ion-text>
-              <ion-text color="success"> {{guestIn}} </ion-text>
+              <ion-text class="!font-semibold"> {{guestIn}} </ion-text>
             </div>
-            <div
-              class="visitor-stats d-flex flex-column align-items-end remain-guests"
-            >
-              <ion-text class="mb-2">
+            <div class="flex flex-col w-full">
+              <ion-text>
                 {{'dashboardPage.topBanner.chart.remaining' | translate}}
               </ion-text>
-              <ion-text color="danger"> {{remains}} </ion-text>
+              <ion-text class="!font-semibold" color="danger">
+                {{remains}}
+              </ion-text>
             </div>
           </ion-col>
         </ion-row>
       </ion-grid>
+      <div
+        class="w-full h-fit grid place-items-center absolute left-1/2 -translate-x-1/2 bottom-4"
+      >
+        <img
+          (click)="startScanning()"
+          src="assets/icon/qr-code.png"
+          class="w-[70px]"
+        />
+        <ion-text class="!text-center !text-xs">
+          {{'dashboardPage.clickHereToVerifyGuest' | translate}}
+        </ion-text>
+      </div>
     </div>
     <div
-      class="qrClass d-flex flex-column w-100 justify-content-center align-items-center"
-    >
-      <img
-        (click)="startScanning()"
-        src="assets/icon/qr-code.png"
-        alt="centered image"
-        style="margin-top: 20px"
-        class="w-25"
-      />
-      <ion-text class="mt-1">
-        {{'dashboardPage.clickHereToVerifyGuest' | translate}}
-      </ion-text>
-    </div>
+      class="absolute right-0 w-full h-0.5 border-2 border-dashed border-[var(--sys-outline)] bottom-28"
+    ></div>
+    <div
+      class="w-24 h-24 rounded-full bg-[var(--sys-background)] absolute bottom-16 -left-12"
+    ></div>
+    <div
+      class="w-24 h-24 rounded-full bg-[var(--sys-background)] absolute bottom-16 -right-12"
+    ></div>
   </div>
-
   <div class="last">
     <ion-searchbar
       placeholder="{{'dashboardPage.search' | translate}}"
@@ -132,10 +125,10 @@
             *ngFor="let column of 'dashboardPage.checkedInviteesTable' | translate; index as i"
             class="d-flex align-items-center justify-content-between p-1"
           >
-            <ion-text class="fw-bold">{{column}}</ion-text>
+            <ion-text class="font-light">{{column}}</ion-text>
             <ion-text
               *ngIf="i !== CheckedInviteesTable.SCANNED; else scannedTemplate"
-              class="text-right"
+              class="text-right font-normal"
               >{{getTableValue(invitee,i)}}</ion-text
             >
             <ng-template #scannedTemplate>

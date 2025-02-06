@@ -1,21 +1,3 @@
-<!-- <ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>
-      Tab 3
-    </ion-title>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 3</ion-title>
-    </ion-toolbar>
-  </ion-header>
-
-  <app-explore-container name="Tab 3 page"></app-explore-container>
-</ion-content> -->
-
 <app-navbar></app-navbar>
 <ion-content class="ion-padding">
   <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
@@ -35,18 +17,6 @@
     ></ion-searchbar>
     <div class="d-flex flex-column">
       <div class="d-flex align-items-center my-2">
-        <!-- <ion-button
-          (click)="showingList = true"
-          [fill]="showingList ? '' : 'clear'"
-        >
-          <ion-icon slot="icon-only" name="list"></ion-icon>
-        </ion-button>
-        <ion-button
-          (click)="showingList = false"
-          [fill]="!showingList ? '' : 'clear'"
-        >
-          <ion-icon slot="icon-only" name="grid"></ion-icon>
-        </ion-button> -->
         <ng-container>
           <button
             *ngIf="showingList; else fabListButton"
@@ -96,19 +66,11 @@
               *ngFor="let column of 'tabs2.visitorsList' | translate; index as i"
               class="d-flex align-items-center justify-content-between p-1"
             >
-              <ion-text class="fw-bold">{{column}}</ion-text>
-              <ion-text class="text-right"
+              <ion-text class="font-light">{{column}}</ion-text>
+              <ion-text class="text-right font-normal"
                 >{{getTableValue(invitee,i)}}</ion-text
               >
             </div>
-            <!-- <div
-              class="d-flex align-items-center justify-content-between border-b p-1"
-            >
-              <ion-text class="fw-bold"></ion-text>
-              <button mat-icon-button (click)="scanVisitor(invitee)">
-                <mat-icon svgIcon="qr-code-scan" matPrefix></mat-icon>
-              </button>
-            </div> -->
           </div>
         </div>
       </ng-container>
@@ -166,16 +128,6 @@
           >No data matching the filter <b>"{{searchInput.value}}"</b></ion-text
         >
       </ng-container>
-
-      <!-- <mat-paginator
-        #paginator
-        [length]="dataSource.data.length"
-        [pageSize]="5"
-        [pageSizeOptions]="[5, 10, 20]"
-        aria-label="Select page"
-        [showFirstLastButtons]="true"
-      >
-      </mat-paginator> -->
       <mat-paginator
         #paginator
         [length]="dataSource.filteredData.length"

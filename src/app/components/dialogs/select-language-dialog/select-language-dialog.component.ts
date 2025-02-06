@@ -15,6 +15,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { IonicModule } from '@ionic/angular';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { TranslateConfigService } from 'src/app/translate-config.service';
+import { AppConfigService } from 'src/app/services/App-Config/app-config.service';
 
 @Component({
   selector: 'app-select-language-dialog',
@@ -43,10 +44,11 @@ export class SelectLanguageDialogComponent implements OnInit {
     private translate: TranslateService,
     private dialogRef: MatDialogRef<SelectLanguageDialogComponent>,
     private translateConfigService: TranslateConfigService,
+    private _appConfig: AppConfigService,
     @Inject(MAT_DIALOG_DATA) public data: { language: string }
   ) {}
   private createFormGroup() {
-    let lang = localStorage.getItem('currentLang');
+    const lang = this._appConfig.getItemFromSessionStorage('currentLang');
     this.formGroup = this.fb.group({
       language: this.fb.control(lang, [Validators.required]),
     });

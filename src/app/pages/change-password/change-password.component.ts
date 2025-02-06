@@ -95,7 +95,9 @@ export class ChangePasswordComponent implements OnInit {
   }
   postData!: FormGroup;
   ngOnInit() {
-    this.datas = localStorage.getItem(this.TOKEN_NAME);
+    this.datas = this.appConfig.getItemFromSessionStorage(
+      AppUtilities.TOKEN_NAME
+    );
     const convertion = JSON.parse(this.datas);
 
     this.mobileNumber = convertion.mobile;
@@ -136,7 +138,9 @@ export class ChangePasswordComponent implements OnInit {
               .subscribe({
                 next: (message) => {
                   AppUtilities.showSuccessMessage('', message);
-                  let eventId = localStorage.getItem('event_id');
+                  const eventId = this.appConfig.getItemFromSessionStorage(
+                    AppUtilities.EVENT_ID
+                  );
                   if (eventId) {
                     this.router.navigate(['tabs/dashboard']);
                   } else {

@@ -24,6 +24,7 @@ import { ServiceService } from 'src/app/services/service.service';
 import { AppConfigService } from 'src/app/services/App-Config/app-config.service';
 import { UnsubscriberService } from 'src/app/services/unsubscriber/unsubscriber.service';
 import { LoadingService } from 'src/app/services/loading-service/loading.service';
+import { SharedService } from 'src/app/services/shared-service/shared.service';
 
 @Component({
   selector: 'app-verify-code',
@@ -72,18 +73,45 @@ export class VerifyCodeComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private service: ServiceService,
-    //private loadingCtrl: LoadingController,
+    private tr: TranslateService,
     private appConfig: AppConfigService,
     private translate: TranslateService,
     private _unsubscriber: UnsubscriberService,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
+    private sharedService: SharedService
   ) {}
   postData = {
     qrcode: '',
   };
+  private switchScanCardErrorMessage(message: string) {
+    const dateError =
+      'Failed! Card verification must be on date of event.'.toLocaleLowerCase();
+    const cardSizeIsEmpty =
+      'Please provide number of invitees checking in'.toLocaleLowerCase();
+    const cardSizeExceeded =
+      'Failed! Number of visitor should not exceed limit.'.toLocaleLowerCase();
+    const cardFull =
+      'Failed! All invitees have checked-in already.'.toLocaleLowerCase();
+    switch (message.toLocaleLowerCase()) {
+      case dateError:
+        return 'qrpage.cardMustBeScannedOnDateOfEventText';
+      case cardSizeIsEmpty:
+        return 'qrpage.provideNumberOfVisitorsCheckedIn';
+      case cardSizeExceeded:
+        return 'qrpage.cardSizeExceeded';
+      case cardFull:
+        return 'qrpage.inviteesAlreadyCheckedIn';
+      default:
+        return 'qrpage.failedToScanTryAgain';
+    }
+  }
   ngOnInit() {
-    this.eventname = localStorage.getItem(this.event_name)!;
-    this.event_id = localStorage.getItem(this.eventIDs)!;
+    this.eventname = this.appConfig.getItemFromSessionStorage(
+      AppUtilities.EVENT_NAME
+    );
+    this.event_id = this.appConfig.getItemFromSessionStorage(
+      AppUtilities.EVENT_ID
+    );
   }
   ngOnDestroy(): void {
     this.subsriptions.forEach((s) => s.unsubscribe());
@@ -137,9 +165,18 @@ export class VerifyCodeComponent implements OnInit, OnDestroy {
         });
     });
   }
-
+  private openDashboard() {
+    this.router
+      .navigate(['tabs/dashboard'])
+      .then(() => {
+        this.sharedService.triggerPullToRefresh();
+      })
+      .catch((err) => console.error(err));
+  }
   verifyOneVisitor() {
-    this.userId = localStorage.getItem(this.TOKEN_user);
+    this.userId = this.appConfig.getItemFromSessionStorage(
+      AppUtilities.TOKEN_user
+    );
     this.visitor_id = this.qrResponse.visitor_id;
 
     const params = {
@@ -159,12 +196,29 @@ export class VerifyCodeComponent implements OnInit, OnDestroy {
           next: (res) => {
             this.verifyresponse = res;
             if (this.verifyresponse.status == 1) {
-              AppUtilities.showSuccessMessage('', this.verifyresponse.message);
-              this.router.navigate(['tabs/dashboard']);
+              this.tr
+                .get('qrpage.successfullyScanned')
+                .pipe(this._unsubscriber.takeUntilDestroy)
+                .subscribe({
+                  next: (message) => {
+                    AppUtilities.showSuccessMessage('', message);
+                    this.openDashboard();
+                  },
+                  error: (err) => console.error(err),
+                });
               this.input = '';
               ``;
             } else {
-              AppUtilities.showErrorMessage('', this.verifyresponse.message);
+              const msg = this.switchScanCardErrorMessage(
+                this.verifyresponse.message
+              );
+              this.tr
+                .get(msg)
+                .pipe(this._unsubscriber.takeUntilDestroy)
+                .subscribe({
+                  next: (message) => AppUtilities.showErrorMessage('', message),
+                  error: (err) => console.error(err),
+                });
               this.input = '';
             }
           },
@@ -188,9 +242,5 @@ export class VerifyCodeComponent implements OnInit, OnDestroy {
   }
   changepass() {
     this.router.navigate(['changepwd']);
-  }
-  logout() {
-    localStorage.clear();
-    this.router.navigate(['login']);
   }
 }

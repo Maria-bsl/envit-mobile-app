@@ -13,7 +13,9 @@
     },
     "labels": {
       "filterNoDataFound": "No data matching the filter",
-      "loadingPleaseWait": "Loading, please wait a minute..."
+      "loadingPleaseWait": "Loading, this may take a minute...",
+      "loading": "Loading",
+      "cameraPermissionsDenied": "Camera permissions denied."
     }
   },
   "refresher": {
@@ -78,7 +80,7 @@
       "chart": {
         "checked": "Checked",
         "unchecked": "Unchecked",
-        "in": "In",
+        "in": "Visitors In",
         "remaining": "Remaining",
         "total": "Total"
       }
@@ -94,8 +96,15 @@
     "cardSize": "Card Size",
     "code": "Code",
     "venu": "Venu",
+    "verifyCard": "Verify card",
     "numberOfVisitors": "Number of visitor(s)",
-    "selectNumberOfInvitees": "Select number of invitees"
+    "selectNumberOfInvitees": "Select number of invitees",
+    "successfullyScanned": "Invitee has been successfully checked-in.",
+    "cardMustBeScannedOnDateOfEventText": "Failed! Card verification must be on date of event.",
+    "provideNumberOfVisitorsCheckedIn": "Please provide number of invitees checking in.",
+    "cardSizeExceeded": "Failed! Number of visitor should not exceed limit.",
+    "inviteesAlreadyCheckedIn": "Failed! All invitees have checked-in already.",
+    "failedToScanTryAgain": "Failed to scan visitor. Please try again or contact support."
   },
   "verifyCode": {
     "serialNumberText": "Enter serial number to verify",
@@ -135,6 +144,9 @@
     "title": "List of all invitees",
     "visitorsList": ["Name", "Mobile", "Size", "Table"]
   },
+  "tab3": {
+    "sureRegisterVisitor": "Are you sure you want to register {{}} to the event?"
+  },
   "registrationPage": {
     "title": "Add new invitee",
     "form": {
@@ -158,6 +170,9 @@
         "missingMobileNumber": "Please, enter mobile number",
         "missingCardSize": "Please, enter card size"
       }
+    },
+    "success": {
+      "inviteeAddedSuccessfully": "Created invitee successfully!"
     },
     "actions": {
       "addInvitee": "Add invite"

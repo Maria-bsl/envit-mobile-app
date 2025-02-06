@@ -47,6 +47,7 @@ import {
 } from '@ionic/angular/standalone';
 import { arrowBack } from 'ionicons/icons';
 import { LoadingService } from 'src/app/services/loading-service/loading.service';
+import { SharedService } from 'src/app/services/shared-service/shared.service';
 
 @Component({
   selector: 'app-registration-page',
@@ -56,7 +57,6 @@ import { LoadingService } from 'src/app/services/loading-service/loading.service
   imports: [
     CommonModule,
     FormsModule,
-    //IonicModule,
     MatSelectModule,
     MatInputModule,
     MatFormFieldModule,
@@ -73,45 +73,27 @@ import { LoadingService } from 'src/app/services/loading-service/loading.service
   ],
 })
 export class RegistrationPageComponent implements OnInit, OnDestroy {
-  private readonly TOKEN_user = 'bizlogicj';
-  private readonly eventIDs = 'event_id';
-  private readonly TOKEN_Cstomer = 'cstID';
-  subscriptions: Subscription[] = [];
   formGroup!: FormGroup;
-  posted_id: any;
-  user: any;
-  event_id: any;
-  response: any;
-  cust_reg_sno: any;
-  language: any;
   constructor(
     private router: Router,
-    //private loadingCtrl: LoadingController,
     private appConfig: AppConfigService,
     private service: ServiceService,
     private fb: FormBuilder,
     private location: Location,
     private translateConfigService: TranslateConfigService,
-    private translate: TranslateService,
+    private tr: TranslateService,
     private _unsubscriber: UnsubscriberService,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
+    private sharedService: SharedService
   ) {
     addIcons({ arrowBack });
     this.translateConfigService.getDefaultLanguage();
-    this.language = this.translateConfigService.getCurrentLang();
   }
   ngOnInit() {
-    this.user = localStorage.getItem(this.TOKEN_user);
-    this.event_id = localStorage.getItem(this.eventIDs);
-    this.cust_reg_sno = localStorage.getItem(this.TOKEN_Cstomer);
-
-    this.posted_id = JSON.parse(this.user);
-    this.createFormGroup();
     this.appConfig.backButtonPressed();
+    this.createFormGroup();
   }
-  ngOnDestroy(): void {
-    this.subscriptions.forEach((s) => s.unsubscribe());
-  }
+  ngOnDestroy(): void {}
   private createFormGroup() {
     this.formGroup = this.fb.group({
       visitor_name: this.fb.control('', [Validators.required]),
@@ -124,59 +106,74 @@ export class RegistrationPageComponent implements OnInit, OnDestroy {
       email_address: this.fb.control('', [Validators.email]),
     });
   }
-  PostData = {
-    visitor_name: '',
-    no_of_persons: '',
-    table_number: '',
-    email_address: '',
-    mobile_no: '',
-  };
   saveData() {
     if (this.formGroup.invalid) {
       this.formGroup.markAllAsTouched();
       return;
     }
-    const bodyparams = {
+    const saveDataRequestFailed = (err: any) => {
+      if (err.error.errorList) {
+        let messages = err.error.errorList;
+        AppUtilities.showErrorMessage(messages[0], '');
+      } else if (err.error.message) {
+        AppUtilities.showErrorMessage(err.error.message, '');
+      } else {
+        this.tr.get('defaults.errors.failed').subscribe({
+          next: (message) => {
+            AppUtilities.showErrorMessage(message, '');
+          },
+        });
+      }
+    };
+    const saveDataRequestSuccess = (res: any) => {
+      this.tr
+        .get('registrationPage.success.inviteeAddedSuccessfully')
+        .pipe(this._unsubscriber.takeUntilDestroy)
+        .subscribe({
+          next: (message) => {
+            AppUtilities.showSuccessMessage('', message);
+            this.router
+              .navigate(['tabs/tab3'])
+              .then(() => {
+                this.sharedService.triggerAddedVisitor();
+              })
+              .catch((err) => console.error(err));
+          },
+          error: (err) => console.error(err),
+        });
+    };
+    const bodyParams = {
       ...this.formGroup.value,
-      mobile_no: '255' + this.mobile_no.value,
+      mobile_no: `255${this.mobile_no.value}`,
       card_state_mas_sno: '1',
-      event_det_sno: this.event_id,
-      cust_reg_sno: this.cust_reg_sno,
-      posted_by: this.posted_id,
+      event_det_sno: this.appConfig.getItemFromSessionStorage(
+        AppUtilities.EVENT_ID
+      ),
+      cust_reg_sno: this.appConfig.getItemFromSessionStorage(
+        AppUtilities.TOKEN_Cstomer
+      ),
+      posted_by: JSON.parse(
+        this.appConfig.getItemFromSessionStorage(AppUtilities.TOKEN_user)
+      ),
     };
     this.loadingService.startLoading().then((loading) => {
       this.service
-        .CustomerRegistration(bodyparams)
+        .CustomerRegistration(bodyParams)
         .pipe(
           this._unsubscriber.takeUntilDestroy,
           finalize(() => this.loadingService.dismiss())
         )
         .subscribe({
-          next: (res) => {
-            this.response = res;
-            AppUtilities.showSuccessMessage('', this.response.response);
-            this.router.navigate(['tabs/tab2']);
-          },
-          error: (err) => {
-            if (err.error.errorList) {
-              let messages = err.error.errorList;
-              AppUtilities.showErrorMessage(messages[0], '');
-            } else if (err.error.message) {
-              AppUtilities.showErrorMessage(err.error.message, '');
-            } else {
-              this.translate.get('defaults.errors.failed').subscribe({
-                next: (message) => {
-                  AppUtilities.showErrorMessage(message, '');
-                },
-              });
-            }
-          },
+          next: (res) => saveDataRequestSuccess(res),
+          error: (err) => saveDataRequestFailed(err),
+          complete: async () =>
+            (await this.loadingService.isLoading()) &&
+            this.loadingService.dismiss(),
         });
     });
   }
   backBtn() {
     this.location.back();
-    //this.router.navigate(['tabs/tab2']);
   }
   get visitor_name() {
     return this.formGroup.get('visitor_name') as FormControl;

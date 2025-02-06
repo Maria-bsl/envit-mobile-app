@@ -61,18 +61,24 @@ export class SwitchEventComponent implements OnInit, OnDestroy {
     private loadingService: LoadingService
   ) {}
   ngOnInit() {
-    this.eventsList = JSON.parse(
-      localStorage.getItem('event_details_list') ?? ''
-    );
-    if (!this.eventsList) this.router.navigate(['login']);
-    else {
-      let eventId = localStorage.getItem('event_id');
-      if (eventId !== undefined && eventId !== null) {
-        let found = this.eventsList.find((c) => c.event_id === Number(eventId));
-        if (found) {
-          this.selected = this.eventsList.indexOf(found);
-        }
+    try {
+      this.eventsList = JSON.parse(
+        this.appConfig.getItemFromSessionStorage(
+          AppUtilities.EVENT_DETAILS_LIST
+        )
+      );
+      if (!this.eventsList) this.router.navigate(['login']);
+      const eventId = this.appConfig.getItemFromSessionStorage(
+        AppUtilities.EVENT_ID
+      );
+      if (eventId) {
+        const found = this.eventsList.find(
+          (c) => c.event_id === Number(eventId)
+        );
+        found && (this.selected = this.eventsList.indexOf(found));
       }
+    } catch (error: any) {
+      this.eventsList = [];
     }
   }
   ngOnDestroy(): void {
@@ -82,9 +88,12 @@ export class SwitchEventComponent implements OnInit, OnDestroy {
     if (index < 0 || index > this.eventsList.length - 1)
       throw Error('Event index is out of range.');
     this.selected = index;
-    let event = this.eventsList.at(this.selected);
+    const event = this.eventsList.at(this.selected);
     if (event) {
-      localStorage.setItem('event_name', event.event_name);
+      this.appConfig.addSessionStorageItem(
+        AppUtilities.EVENT_NAME,
+        event.event_name
+      );
     }
   }
   openSelectedEvent(selected: EventDetailsResponse) {
@@ -94,10 +103,12 @@ export class SwitchEventComponent implements OnInit, OnDestroy {
       },
       replaceUrl: true,
     };
-    let event = this.eventsList.at(this.selected);
-    if (event) {
-      localStorage.setItem('event_id', event.event_id.toString());
-    }
+    const event = this.eventsList.at(this.selected);
+    event &&
+      this.appConfig.addSessionStorageItem(
+        AppUtilities.EVENT_ID,
+        event.event_id.toString()
+      );
     this.router.navigateByUrl('tabs/dashboard', navigationExtras);
   }
   async openDashboard() {
@@ -105,8 +116,10 @@ export class SwitchEventComponent implements OnInit, OnDestroy {
       AppUtilities.showWarningMessage('', 'Please select an event');
       return;
     }
-    let selected: EventDetailsResponse = this.eventsList.at(this.selected)!;
-    let tokenName = localStorage.getItem(AppUtilities.TOKEN_NAME);
+    const selected: EventDetailsResponse = this.eventsList.at(this.selected)!;
+    const tokenName = this.appConfig.getItemFromSessionStorage(
+      AppUtilities.TOKEN_NAME
+    );
     if (tokenName) {
       const params = {
         mobile_number: JSON.parse(tokenName).mobile,
@@ -121,11 +134,11 @@ export class SwitchEventComponent implements OnInit, OnDestroy {
           )
           .subscribe({
             next: (result: any) => {
-              localStorage.setItem(
+              this.appConfig.addSessionStorageItem(
                 AppUtilities.TOKEN_user,
                 result.user_id.toString()
               );
-              localStorage.setItem(
+              this.appConfig.addSessionStorageItem(
                 AppUtilities.TOKEN_Cstomer,
                 result.customer_admin_id.toString()
               );
@@ -138,37 +151,6 @@ export class SwitchEventComponent implements OnInit, OnDestroy {
             },
           });
       });
-      // this.loadingService
-      //   .startLoading()
-      //   .pipe(this._unsubscriber.takeUntilDestroy)
-      //   .subscribe({
-      //     next: () => {
-      //       this.service
-      //         .EventChoices(params)
-      //         .pipe(
-      //           finalize(() => this.loadingService.dismiss())
-      //         )
-      //         .subscribe({
-      //           next: (result: any) => {
-      //             localStorage.setItem(
-      //               AppUtilities.TOKEN_user,
-      //               result.user_id.toString()
-      //             );
-      //             localStorage.setItem(
-      //               AppUtilities.TOKEN_Cstomer,
-      //               result.customer_admin_id.toString()
-      //             );
-      //           },
-      //           error: (error) => {
-      //             this.appConfig.closeLoading(this.ionLoading);
-      //             throw error;
-      //           },
-      //           complete: () => {
-      //             this.openSelectedEvent(selected);
-      //           },
-      //         });
-      //     },
-      //   });
     }
   }
 }

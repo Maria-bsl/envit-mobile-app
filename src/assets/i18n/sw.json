@@ -13,7 +13,9 @@
     },
     "labels": {
       "filterNoDataFound": "Hakuna data inayolingana na kichujio",
-      "loadingPleaseWait": "Tafadhali, subiri dakika chache"
+      "loadingPleaseWait": "Tafadhali, subiri dakika chache",
+      "loading": "Subiri",
+      "cameraPermissionsDenied": "Ruhusa za kamera zimekataliwa."
     }
   },
   "refresher": {
@@ -24,6 +26,9 @@
     "home": "Nyumbani",
     "verify": "Thibitisha",
     "invitee": "Waalikwa"
+  },
+  "tab3": {
+    "sureRegisterVisitor": "Una uhakika unataka kujiandikisha {{}} kwenye tukio?"
   },
   "navbar": {
     "languages": "Chagua lugha",
@@ -75,43 +80,50 @@
       "chart": {
         "checked": "Iliyosajiliwa",
         "unchecked": "Haijasajiliwa",
-        "in": "Ndani",
-        "remaining": "Waliyobaki",
+        "in": "Wageni walioingia",
+        "remaining": "Wageni waliyobaki",
         "total": "Jumla"
       }
     },
     "search": "Tafuta jina la mwalikwa",
-    "clickHereToVerifyGuest": "Bonyeza hapa ili kuthibitisha mgeni",
+    "clickHereToVerifyGuest": "Bofya hapa ili kuthibitisha kadi",
     "checkedInviteesTable": [
-      "Jina la Mgeni",
-      "Imechanganuliwa",
-      "Meza",
+      "Jina",
+      "Idadi ya walioalikwa",
+      "Namba ya mwaliko",
       "Imethibitishwa na"
     ],
     "cameraPermissionDenied": "Ruhusa ya kamera imekataliwa.",
     "failedToReadQrCode": "Imeshindwa kusoma msimbo wa qr."
   },
   "qrpage": {
-    "invitee": "Mwaliko",
-    "cardSize": "Ukubwa wa Kadi",
-    "code": "Msimbo",
+    "invitee": "Jina",
+    "cardSize": "Idadi ya walioalikwa",
+    "code": "Namba ya mwaliko",
     "venu": "Venu",
+    "verifyCard": "Thibitisha kadi",
     "numberOfVisitors": "Idadi ya wageni",
-    "selectNumberOfInvitees": "Chagua idadi ya waalikwa"
+    "selectNumberOfInvitees": "Chagua idadi ya waalikwa",
+    "successfullyScanned": "Mwaliko umekaguliwa kwa mafanikio.",
+    "cardMustBeScannedOnDateOfEventText": "Imeshindwa! Uthibitishaji wa kadi lazima uwe tarehe ya tukio.",
+    "provideNumberOfVisitorsCheckedIn": "Tafadhali toa idadi ya waalikwa wanaoangalia katika.",
+    "cardSizeExceeded": "Imeshindwa! Idadi ya wageni haipaswi kuzidi kikomo.",
+    "inviteesAlreadyCheckedIn": "Imeshindwa! Waalikwa wote tayari wameingia.",
+    "failedToScanTryAgain": "Imeshindwa kuchanganua mgeni. Tafadhali jaribu tena au wasiliana na msaada."
   },
   "verifyCode": {
-    "serialNumberText": "Ingiza nambari ya serial ili kuthibitisha",
+    "serialNumberText": "Ingiza namba ya mwaliko",
     "serialNumber": "Nambari ya Serial",
     "form": {
       "placeholders": {
-        "serialNumber": "Ingiza nambari ya serial"
+        "serialNumber": "Namba ya mwaliko"
       },
       "errors": {
         "serialNumber": "Tafadhali ingiza nambari ya serial"
       }
     },
     "actions": {
-      "verify": "Thibitisha"
+      "verify": "Thibitisha mwaliko"
     }
   },
   "verifyUser": {
@@ -160,6 +172,9 @@
         "missingMobileNumber": "Tafadhali, ingiza nambari ya simu",
         "missingCardSize": "Tafadhali, ingiza ukubwa wa kadi"
       }
+    },
+    "success": {
+      "inviteeAddedSuccessfully": "Kuundwa kwa mwaliko kwa mafanikio!"
     },
     "actions": {
       "addInvitee": "Ongeza mwalikwa"

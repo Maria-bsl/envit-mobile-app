@@ -60,4 +60,20 @@ export class AppConfigService {
       //this.backBtn();
     });
   }
+
+  /**
+   * Adds an item to session storage
+   * @param key item key
+   * @param value
+   */
+  addSessionStorageItem(key: string, value: string) {
+    sessionStorage.setItem(key, value);
+  }
+  clearSessionStorage() {
+    sessionStorage.length > 0 && sessionStorage.clear();
+  }
+  getItemFromSessionStorage(key: string) {
+    const item = sessionStorage.getItem(key);
+    return item ?? '';
+  }
 }

@@ -6,6 +6,7 @@ import {
   Inject,
   OnDestroy,
   OnInit,
+  signal,
   ViewChild,
 } from '@angular/core';
 import {
@@ -29,7 +30,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import {
+  TranslateModule,
+  TranslatePipe,
+  TranslateService,
+} from '@ngx-translate/core';
 import { NavbarComponent } from 'src/app/components/layouts/navbar/navbar.component';
 import { IonicModule, LoadingController, Platform } from '@ionic/angular';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
@@ -76,6 +81,7 @@ import { AppConfigService } from 'src/app/services/App-Config/app-config.service
 import { UnsubscriberService } from 'src/app/services/unsubscriber/unsubscriber.service';
 import { StylePaginatorDirective } from 'src/app/core/directives/style-paginator.directive';
 import { LoadingService } from 'src/app/services/loading-service/loading.service';
+import { SharedService } from 'src/app/services/shared-service/shared.service';
 
 @Component({
   selector: 'app-tab1',
@@ -103,8 +109,8 @@ import { LoadingService } from 'src/app/services/loading-service/loading.service
     IonRow,
     IonCol,
     StylePaginatorDirective,
-    //StylePaginatorDirective,
   ],
+  providers: [TranslatePipe],
 })
 export class Tab1Page implements OnInit, AfterViewInit, AfterViewChecked {
   barcodes: Barcode[] = [];
@@ -120,15 +126,13 @@ export class Tab1Page implements OnInit, AfterViewInit, AfterViewChecked {
     CheckedInviteesTableKeys.TABLE_NUMBER,
     CheckedInviteesTableKeys.VERIFIED_BY,
   ];
-  //scanSub: any;
   qrText: string = '';
-  //userInfo: any;
   listOfInvitee: any;
   guestIn = 0;
   remains = 0;
   totalGuest = 0;
   totalVisitors$ = new BehaviorSubject<number>(0);
-  eventname: string = localStorage.getItem(AppUtilities.EVENT_NAME)!;
+  eventname = this.appConfig.getItemFromSessionStorage(AppUtilities.EVENT_NAME);
   filterTerm = new FormControl('', []);
   dataSource: MatTableDataSource<any> = new MatTableDataSource<any>();
 
@@ -149,10 +153,13 @@ export class Tab1Page implements OnInit, AfterViewInit, AfterViewChecked {
     legend: {
       enabled: false,
     },
+    title: {
+      text: '0',
+    },
     chart: {
-      height: 200,
-      width: 200,
-      backgroundColor: '#ffffff',
+      height: 150,
+      width: 150,
+      backgroundColor: 'transparent',
       style: {
         opacity: 1,
         borderRadius: 12,
@@ -160,6 +167,7 @@ export class Tab1Page implements OnInit, AfterViewInit, AfterViewChecked {
     },
     series: [],
   };
+  isReadyChart = signal<boolean>(false);
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
   constructor(
@@ -170,27 +178,25 @@ export class Tab1Page implements OnInit, AfterViewInit, AfterViewChecked {
     public platform: Platform,
     private iconRegistry: MatIconRegistry,
     private sanitizer: DomSanitizer,
-    private translate: TranslateService,
+    private tr: TranslateService,
+    private _trPipe: TranslatePipe,
     private _unsubscriber: UnsubscriberService,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
+    private sharedService: SharedService
   ) {
     this.registerIcons();
   }
   private barcodeScannerReadyEventListener() {
     BarcodeScanner.addListener(
       'googleBarcodeScannerModuleInstallProgress',
-      (e) => {
-        if (e.state === GoogleBarcodeScannerModuleInstallState.COMPLETED) {
-          if (this.appConfig.loading) {
-            this.appConfig.loading.dismiss();
-            this.appConfig.loading = null;
-          }
-          this.scanCard();
-        } else if (e.progress && e.progress === 100) {
-          if (this.appConfig.loading) {
-            this.appConfig.loading.dismiss();
-            this.appConfig.loading = null;
-          }
+      async (e) => {
+        const stateCompletedStrict =
+          e.state === GoogleBarcodeScannerModuleInstallState.COMPLETED;
+        const stateComplete =
+          e.state == GoogleBarcodeScannerModuleInstallState.COMPLETED;
+        if (stateComplete || stateCompletedStrict) {
+          (await this.loadingService.isLoading()) &&
+            this.loadingService.dismiss();
           this.scanCard();
         }
       }
@@ -208,6 +214,14 @@ export class Tab1Page implements OnInit, AfterViewInit, AfterViewChecked {
         throw err;
       });
   }
+  private pullToRefreshServiceHandler() {
+    this.sharedService.pullToRefreshSource$
+      .pipe(this._unsubscriber.takeUntilDestroy)
+      .subscribe({
+        next: () => this.requestInviteesList(),
+        error: (err) => console.error(err),
+      });
+  }
   ngAfterViewInit(): void {
     if (this.paginator) {
       this.dataSource.paginator = this.paginator;
@@ -218,11 +232,12 @@ export class Tab1Page implements OnInit, AfterViewInit, AfterViewChecked {
     BarcodeScanner.isSupported().then((result) => {
       this.isSupportedBarCode = result.supported;
     });
-    //this.barcodeScannerReadyEventListener();
+    this.barcodeScannerReadyEventListener();
     this.requestInviteesList();
     this.pullToRefreshHandler();
     this.searchInviteesHandler();
     this.initVisitorsChart();
+    this.pullToRefreshServiceHandler();
   }
   private initVisitorsChart() {
     const self = this;
@@ -256,10 +271,6 @@ export class Tab1Page implements OnInit, AfterViewInit, AfterViewChecked {
       });
   }
   private registerIcons() {
-    // iconRegistry.addSvgIcon(
-    //   'list',
-    //   sanitizer.bypassSecurityTrustResourceUrl('/assets/feather/list.svg')
-    // );
     let featherIcons = ['list', 'grid'];
     featherIcons.forEach((icon) => {
       this.iconRegistry.addSvgIcon(
@@ -309,60 +320,62 @@ export class Tab1Page implements OnInit, AfterViewInit, AfterViewChecked {
   private updateChartOptions() {
     const self = this,
       chart = this.chart;
-    this.translate.get('dashboardPage.topBanner.chart').subscribe({
-      next: (chartLabels) => {
-        self.chartOptions.title = {
-          verticalAlign: 'middle',
-          floating: true,
-          text: `${this.totalGuest}`,
-          style: {
-            fontSize: '24px',
-            //color: '#ffffff',
-            color: '#000000',
-          },
-        };
-        (self.chartOptions.subtitle = {
-          verticalAlign: 'middle',
-          floating: true,
-          text: chartLabels.total,
-          y: 36,
-          style: {
-            fontSize: '16px',
-            //color: '#f6f6f6',
-            color: '#000000',
-          },
-        }),
-          (self.chartOptions.series = [
-            {
-              type: 'pie',
-              dataLabels: {
-                connectorWidth: 0,
-                enabled: false,
-              },
-              data: [
-                {
-                  y: this.guestIn,
-                  color: '#2dd36f',
-                  name: chartLabels.checked,
-                  borderColor: 'transparent',
-                },
-                {
-                  y: this.remains,
-                  color: '#eb445a',
-                  name: chartLabels.unchecked,
-                  borderColor: 'transparent',
-                },
-              ],
-              innerSize: '80%',
-            },
-          ]);
+    self.chartOptions.title = {
+      verticalAlign: 'middle',
+      floating: true,
+      text: `${this.totalGuest}`,
+      style: {
+        fontSize: '24px',
+        color: 'var(--sys-shadow)',
+        opacity: 1,
       },
-    });
+    };
+    // self.chartOptions.subtitle = {
+    //   verticalAlign: 'middle',
+    //   floating: true,
+    //   text: this._trPipe.transform('dashboardPage.topBanner.chart.total'),
+    //   y: 80,
+    //   style: {
+    //     fontSize: '16px',
+    //     color: 'var(--sys-shadow)',
+    //   },
+    // };
+    self.chartOptions.series = [
+      {
+        type: 'pie',
+        dataLabels: {
+          connectorWidth: 0,
+          enabled: false,
+        },
+        data: [
+          {
+            y: this.guestIn,
+            color: '#2dd36f',
+            name: this._trPipe.transform(
+              'dashboardPage.topBanner.chart.checked'
+            ),
+            borderColor: 'transparent',
+          },
+          {
+            y: this.remains,
+            color: '#eb445a',
+            name: this._trPipe.transform(
+              'dashboardPage.topBanner.chart.unchecked'
+            ),
+            borderColor: 'transparent',
+          },
+        ],
+        innerSize: '80%',
+      },
+    ];
     self.updateFromInput = true;
+    this.isReadyChart.set(true);
   }
   private requestInviteesList() {
     this.loadingService.startLoading().then((loading) => {
-      const eventId = Number(localStorage.getItem(this.eventIDs));
+      const eventId = this.appConfig.getItemFromSessionStorage(
+        AppUtilities.EVENT_ID
+      );
       let inviteeChecked$ = from(this.service.inviteeChecked(eventId));
       let getAllinvitee$ = from(this.service.getAllinvitee(eventId)!);
       let observables = zip(inviteeChecked$, getAllinvitee$);
@@ -382,7 +395,7 @@ export class Tab1Page implements OnInit, AfterViewInit, AfterViewChecked {
             this.updateChartOptions();
           },
           error: (err) => {
-            this.translate.get('defaults.errors.failed').subscribe({
+            this.tr.get('defaults.errors.failed').subscribe({
               next: (message) => {
                 AppUtilities.showErrorMessage('', message);
               },
@@ -411,99 +424,39 @@ export class Tab1Page implements OnInit, AfterViewInit, AfterViewChecked {
     }
   }
   startScanning() {
-    // const permissions = () => {
-    //   return new Promise<boolean>((resolve, reject) => {
-    //     BarcodeScanner.requestPermissions()
-    //       .then(({ camera }) =>
-    //         resolve(camera === 'granted' || camera === 'limited')
-    //       )
-    //       .catch((err) => reject(err));
-    //   });
-    // };
+    this.requestPermissions()
+      .then(async (granted) => {
+        if (granted) {
+          let isGoogleBarcodeScannerModuleAvailable = async () => {
+            const { available } =
+              await BarcodeScanner.isGoogleBarcodeScannerModuleAvailable();
+            return available;
+          };
 
-    // const isAvailable = () => {
-    //   return new Promise<boolean>((resolve, reject) => {
-    //     BarcodeScanner.isGoogleBarcodeScannerModuleAvailable()
-    //       .then(({ available }) => resolve(available))
-    //       .catch((err) => reject(err));
-    //   });
-    // };
-
-    // from(permissions()).pipe(
-    //   this._unsubscriber.takeUntilDestroy,
-    //   switchMap((allowed) => {
-    //     if (allowed === null || allowed === false) {
-    //       return throwError(() => new Error('Permission not granted'));
-    //     }
-    //     return from(isAvailable());
-    //   }),
-    //   tap((available) => {
-    //     !available &&
-    //       this.loadingService.startLoading().then((loading) => {
-    //         BarcodeScanner.addListener(
-    //           'googleBarcodeScannerModuleInstallProgress',
-    //           (e) => {
-    //             if (
-    //               e.state === GoogleBarcodeScannerModuleInstallState.COMPLETED
-    //             ) {
-    //               this.loadingService.dismiss();
-    //               from(isAvailable())
-    //                 .pipe(this._unsubscriber.takeUntilDestroy)
-    //                 .subscribe({
-    //                   next: (available) => {},
-    //                   error: (err) => console.error(err),
-    //                 });
-    //             } else if (e.progress && e.progress === 100) {
-    //               this.loadingService.dismiss();
-    //               from(isAvailable())
-    //                 .pipe(this._unsubscriber.takeUntilDestroy)
-    //                 .subscribe({
-    //                   next: (available) => {},
-    //                   error: (err) => console.error(err),
-    //                 });
-    //             }
-    //           }
-    //         );
-    //         BarcodeScanner.installGoogleBarcodeScannerModule();
-    //       });
-    //   })
-    // );
-
-    this.requestPermissions().then(async (granted) => {
-      if (granted) {
-        let isGoogleBarcodeScannerModuleAvailable = async () => {
-          const { available } =
-            await BarcodeScanner.isGoogleBarcodeScannerModuleAvailable();
-          return available;
-        };
-
-        let installGoogleBarcodeScannerModule = async () => {
-          await BarcodeScanner.installGoogleBarcodeScannerModule();
-        };
-
-        if (await isGoogleBarcodeScannerModuleAvailable()) {
-          this.scanCard();
+          if (await isGoogleBarcodeScannerModuleAvailable()) {
+            this.scanCard();
+          } else {
+            this.loadingService.startLoading().then((loading) => {
+              BarcodeScanner.installGoogleBarcodeScannerModule();
+            });
+          }
         } else {
-          this.translate.get('defaults.labels.loadingPleaseWait').subscribe({
-            next: async (message) => {
-              let loading = this.appConfig.openLoadingWithMessageAndDuration(
-                message,
-                60000
-              );
-              await installGoogleBarcodeScannerModule();
-              (await loading).dismiss();
-              this.scanCard();
+          this.tr.get('dashboardPage.cameraPermissionDenied').subscribe({
+            next: (message) => {
+              AppUtilities.showErrorMessage('', message);
             },
           });
         }
-      } else {
-        this.translate.get('dashboardPage.cameraPermissionDenied').subscribe({
-          next: (message) => {
-            AppUtilities.showErrorMessage('', message);
-          },
-        });
-      }
-    });
+      })
+      .catch((err) => {
+        this.tr
+          .get('defaults.labels.cameraPermissionsDenied')
+          .pipe(this._unsubscriber.takeUntilDestroy)
+          .subscribe({
+            next: (message) => AppUtilities.showErrorMessage('', message),
+            error: (err) => console.error(err),
+          });
+      });
   }
   sendResult(qrText: any) {
     const navigationExtras: NavigationExtras = {
@@ -530,10 +483,6 @@ export class Tab1Page implements OnInit, AfterViewInit, AfterViewChecked {
   }
   changepass() {
     this.router.navigate(['changepwd']);
-  }
-  logout() {
-    localStorage.clear();
-    this.router.navigate(['login']);
   }
   switchEvent() {
     this.router.navigate(['switch']);

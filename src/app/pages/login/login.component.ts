@@ -43,6 +43,7 @@ import { FLoginPayload } from '../../core/forms/f-login-payload';
 import { UnsubscriberService } from '../../services/unsubscriber/unsubscriber.service';
 import { AppConfigService } from 'src/app/services/App-Config/app-config.service';
 import { LoadingService } from 'src/app/services/loading-service/loading.service';
+import { inOutAnimation } from 'src/app/core/shared/fade-in-out-animation';
 
 @Component({
   selector: 'app-login',
@@ -67,6 +68,7 @@ import { LoadingService } from 'src/app/services/loading-service/loading.service
     IonText,
     IonButton,
   ],
+  animations: [inOutAnimation],
 })
 export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
@@ -81,10 +83,10 @@ export class LoginComponent implements OnInit {
     private translateConfigService: TranslateConfigService,
     private translate: TranslateService,
     private _unsubscriber: UnsubscriberService,
-    private appConfig: AppConfigService,
+    private _appConfig: AppConfigService,
     private loadingService: LoadingService
   ) {
-    this.registerIcons(iconRegistry, sanitizer);
+    this.registerIcons();
     this.translateConfigService.getDefaultLanguage();
     this.language = this.translateConfigService.getCurrentLang();
     this.createLoginFormGroup();
@@ -99,23 +101,17 @@ export class LoginComponent implements OnInit {
       ip_address: this.fb.control('', []),
     });
   }
-  private registerIcons(
-    iconRegistry: MatIconRegistry,
-    sanitizer: DomSanitizer
-  ) {
-    iconRegistry.addSvgIcon(
-      'lock',
-      sanitizer.bypassSecurityTrustResourceUrl('/assets/feather/lock.svg')
-    );
+  private registerIcons() {
+    this._appConfig.addIcons(['lock', 'eye', 'eye-off'], '/assets/feather/');
   }
   private parseLoginResponse(res: LoginResponse) {
-    localStorage.setItem(
+    this._appConfig.addSessionStorageItem(
       AppUtilities.TOKEN_NAME,
       JSON.stringify({ mobile: res.Mobile_Number })
     );
     if (res.event_details && res.event_details.length > 0) {
-      localStorage.setItem(
-        'event_details_list',
+      this._appConfig.addSessionStorageItem(
+        AppUtilities.EVENT_DETAILS_LIST,
         JSON.stringify(res.event_details)
       );
       this.router.navigateByUrl('switch', {
@@ -176,7 +172,7 @@ export class LoginComponent implements OnInit {
     this.router.navigate(['pricing']);
   }
   ngOnInit() {
-    //localStorage.clear();
+    this._appConfig.clearSessionStorage();
   }
   get mobile_number() {
     return this.loginForm.get('mobile_number') as FormControl;

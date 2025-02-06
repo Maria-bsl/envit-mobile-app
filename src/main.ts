@@ -50,6 +50,7 @@ bootstrapApplication(AppComponent, {
           useFactory: createTranslateLoader,
           deps: [HttpClient],
         },
+        defaultLanguage: 'sw',
       }),
     ]),
   ],

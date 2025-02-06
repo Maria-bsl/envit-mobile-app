@@ -75,7 +75,7 @@ export class NavbarComponent implements OnInit {
       this.loadingService.startLoading().then((loading) => {
         this.language = code;
         this.translateConfigService.setLanguage(code);
-        localStorage.setItem('currentLang', code);
+        this.appConfig.addSessionStorageItem('currentLang', code);
         let successMessage$ = this.translate.get(
           'navbar.selectLanguage.successChange'
         );
@@ -128,15 +128,11 @@ export class NavbarComponent implements OnInit {
   }
   logout() {
     this.loadingService.startLoading().then((loading) => {
-      localStorage.clear();
+      this.appConfig.clearSessionStorage();
       setTimeout(() => {
-        //loading.dismiss();
         this.loadingService.dismiss();
         this.router.navigate(['login']);
-        // this.router.navigate(['login']).then((c) => {
-        //   location.reload();
-        // });
-      }, 1500);
+      }, 800);
     });
   }
 }

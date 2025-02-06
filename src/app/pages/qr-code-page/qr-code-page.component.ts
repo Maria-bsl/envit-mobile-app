@@ -39,6 +39,7 @@ import { UnsubscriberService } from 'src/app/services/unsubscriber/unsubscriber.
 import { addIcons } from 'ionicons';
 import { arrowBack } from 'ionicons/icons';
 import { LoadingService } from 'src/app/services/loading-service/loading.service';
+import { SharedService } from 'src/app/services/shared-service/shared.service';
 
 @Component({
   selector: 'app-qr-code-page',
@@ -122,7 +123,8 @@ export class QrCodePageComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private tr: TranslateService,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
+    private sharedService: SharedService
   ) {
     addIcons({ arrowBack });
   }
@@ -177,16 +179,49 @@ export class QrCodePageComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.event_id = localStorage.getItem(this.eventIDs);
+    this.event_id = this.appConfig.getItemFromSessionStorage(
+      AppUtilities.EVENT_ID
+    );
     this.prepareScannedCode();
     this.appConfig.backButtonPressed();
   }
   allClear() {
     this.input = '';
   }
-
+  private switchScanCardErrorMessage(message: string) {
+    const dateError =
+      'Failed! Card verification must be on date of event.'.toLocaleLowerCase();
+    const cardSizeIsEmpty =
+      'Please provide number of invitees checking in'.toLocaleLowerCase();
+    const cardSizeExceeded =
+      'Failed! Number of visitor should not exceed limit.'.toLocaleLowerCase();
+    const cardFull =
+      'Failed! All invitees have checked-in already.'.toLocaleLowerCase();
+    switch (message.toLocaleLowerCase()) {
+      case dateError:
+        return 'qrpage.cardMustBeScannedOnDateOfEventText';
+      case cardSizeIsEmpty:
+        return 'qrpage.provideNumberOfVisitorsCheckedIn';
+      case cardSizeExceeded:
+        return 'qrpage.cardSizeExceeded';
+      case cardFull:
+        return 'qrpage.inviteesAlreadyCheckedIn';
+      default:
+        return 'qrpage.failedToScanTryAgain';
+    }
+  }
+  private openDashboard() {
+    this.router
+      .navigate(['tabs/dashboard'])
+      .then(() => {
+        this.sharedService.triggerPullToRefresh();
+      })
+      .catch((err) => console.error(err));
+  }
   async verify() {
-    this.userId = localStorage.getItem(this.TOKEN_user);
+    this.userId = this.appConfig.getItemFromSessionStorage(
+      AppUtilities.TOKEN_user
+    );
     const params = {
       event_id: this.event_id,
       qr_code: this.qrcode,
@@ -207,15 +242,29 @@ export class QrCodePageComponent implements OnInit {
             next: (res) => {
               this.verifyresponse = res;
               if (this.verifyresponse.status === 1) {
-                AppUtilities.showSuccessMessage(
-                  '',
-                  this.verifyresponse.message
-                );
-                this.router.navigate(['tabs/dashboard']);
+                this.tr
+                  .get('qrpage.successfullyScanned')
+                  .pipe(this._unsubscriber.takeUntilDestroy)
+                  .subscribe({
+                    next: (message) => {
+                      AppUtilities.showSuccessMessage('', message);
+                      this.openDashboard();
+                    },
+                    error: (err) => console.error(err),
+                  });
                 this.input = '';
               } else {
-                AppUtilities.showErrorMessage('', this.verifyresponse.message);
-                //this.router.navigate(['tabs/dashboard']);
+                const msg = this.switchScanCardErrorMessage(
+                  this.verifyresponse.message
+                );
+                this.tr
+                  .get(msg)
+                  .pipe(this._unsubscriber.takeUntilDestroy)
+                  .subscribe({
+                    next: (message) =>
+                      AppUtilities.showErrorMessage('', message),
+                    error: (err) => console.error(err),
+                  });
                 this.input = '';
               }
             },
@@ -232,7 +281,6 @@ export class QrCodePageComponent implements OnInit {
                   );
                 },
               });
-              //this.router.navigate(['tabs/dashboard']);
             },
           });
       })
@@ -241,7 +289,9 @@ export class QrCodePageComponent implements OnInit {
       });
   }
   async autoVerify() {
-    this.userId = localStorage.getItem(this.TOKEN_user);
+    this.userId = this.appConfig.getItemFromSessionStorage(
+      AppUtilities.TOKEN_user
+    );
     const params = {
       event_id: this.event_id,
       qr_code: this.qrcode,
@@ -259,11 +309,31 @@ export class QrCodePageComponent implements OnInit {
           next: (res) => {
             this.verifyresponse = res;
             if (this.verifyresponse.status === 1) {
-              AppUtilities.showSuccessMessage('', this.verifyresponse.message);
-              this.router.navigate(['tabs/dashboard']);
+              this.tr
+                .get('qrpage.successfullyScanned')
+                .pipe(this._unsubscriber.takeUntilDestroy)
+                .subscribe({
+                  next: (message) => {
+                    AppUtilities.showSuccessMessage('', message);
+                    this.openDashboard();
+                  },
+                  error: (err) => console.error(err),
+                });
               this.input = '';
             } else {
-              AppUtilities.showErrorMessage('', this.verifyresponse.message);
+              let msg = this.switchScanCardErrorMessage(
+                this.verifyresponse.message
+              );
+              this.tr
+                .get(msg)
+                .pipe(this._unsubscriber.takeUntilDestroy)
+                .subscribe({
+                  next: (message) => {
+                    AppUtilities.showErrorMessage('', message);
+                    this.router.navigate(['tabs/dashboard']);
+                  },
+                  error: (err) => console.error(err),
+                });
               this.input = '';
             }
           },
@@ -277,8 +347,6 @@ export class QrCodePageComponent implements OnInit {
                 AppUtilities.showErrorMessage(err.failed, err.unexpectedError);
               },
             });
-            //AppUtilities.showErrorMessage('', this.msg);
-            //this.router.navigate(['tabs/dashboard']);
           },
         });
     });

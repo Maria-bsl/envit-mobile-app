@@ -7,6 +7,9 @@ export class AppUtilities {
   static readonly TOKEN_user = 'bizlogicj';
   static readonly TOKEN_Cstomer = 'cstID';
   static readonly EVENT_NAME = 'event_name';
+  static readonly EVENT_ID = 'event_id';
+  static readonly EVENT_DETAILS_LIST = 'event_details_list';
+  static readonly CURRENT_LANG = 'currentLang';
   static showErrorMessage(title: string, message: string) {
     Swal.fire({
       title: title,

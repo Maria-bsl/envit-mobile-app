@@ -38,6 +38,7 @@ import { ServiceService } from 'src/app/services/service.service';
 import { AppConfigService } from 'src/app/services/App-Config/app-config.service';
 import { UnsubscriberService } from 'src/app/services/unsubscriber/unsubscriber.service';
 import { LoadingService } from 'src/app/services/loading-service/loading.service';
+import { SharedService } from 'src/app/services/shared-service/shared.service';
 
 @Component({
   selector: 'app-verify-user',
@@ -103,17 +104,45 @@ export class VerifyUserComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private translate: TranslateService,
     private _unsubscribe: UnsubscriberService,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
+    private sharedService: SharedService,
+    private tr: TranslateService
   ) {}
   ngOnInit() {
-    this.eventname = localStorage.getItem(this.event_name)!;
-    this.event_id = localStorage.getItem(this.eventIDs)!;
+    this.eventname = this.appConfig.getItemFromSessionStorage(
+      AppUtilities.EVENT_NAME
+    );
+    this.event_id = this.appConfig.getItemFromSessionStorage(
+      AppUtilities.EVENT_ID
+    );
     this.appConfig.backButtonPressed();
     this.createPostDataFormGroup();
     this.readQueryParams();
   }
   ngOnDestroy(): void {
     this.subscriptions.forEach((s) => s.unsubscribe());
+  }
+  private switchScanCardErrorMessage(message: string) {
+    const dateError =
+      'Failed! Card verification must be on date of event.'.toLocaleLowerCase();
+    const cardSizeIsEmpty =
+      'Please provide number of invitees checking in'.toLocaleLowerCase();
+    const cardSizeExceeded =
+      'Failed! Number of visitor should not exceed limit.'.toLocaleLowerCase();
+    const cardFull =
+      'Failed! All invitees have checked-in already.'.toLocaleLowerCase();
+    switch (message.toLocaleLowerCase()) {
+      case dateError:
+        return 'qrpage.cardMustBeScannedOnDateOfEventText';
+      case cardSizeIsEmpty:
+        return 'qrpage.provideNumberOfVisitorsCheckedIn';
+      case cardSizeExceeded:
+        return 'qrpage.cardSizeExceeded';
+      case cardFull:
+        return 'qrpage.inviteesAlreadyCheckedIn';
+      default:
+        return 'qrpage.failedToScanTryAgain';
+    }
   }
   private readQueryParams() {
     this.route.queryParams.pipe(this._unsubscribe.takeUntilDestroy).subscribe({
@@ -189,11 +218,21 @@ export class VerifyUserComponent implements OnInit, OnDestroy {
     // this.result = '';
     this.input = '';
   }
+  private openDashboard() {
+    this.router
+      .navigate(['tabs/dashboard'])
+      .then(() => {
+        this.sharedService.triggerPullToRefresh();
+      })
+      .catch((err) => console.error(err));
+  }
   verifyuser() {
     if (this.postData.invalid) {
       return;
     }
-    this.userId = localStorage.getItem(AppUtilities.TOKEN_user);
+    this.userId = this.appConfig.getItemFromSessionStorage(
+      AppUtilities.TOKEN_user
+    );
     this.visitor_id = this.qrinfo.visitor_id;
     const qrcode = this.qrcode;
     const params = {
@@ -208,12 +247,29 @@ export class VerifyUserComponent implements OnInit, OnDestroy {
         next: (res) => {
           this.verifyresponse = res;
           if (this.verifyresponse.status == 1) {
-            AppUtilities.showSuccessMessage('', this.verifyresponse.message);
-            this.router.navigate(['tabs/dashboard']);
+            this.tr
+              .get('qrpage.successfullyScanned')
+              .pipe(this._unsubscribe.takeUntilDestroy)
+              .subscribe({
+                next: (message) => {
+                  AppUtilities.showSuccessMessage('', message);
+                  this.openDashboard();
+                },
+                error: (err) => console.error(err),
+              });
             this.input = '';
             ``;
           } else {
-            AppUtilities.showErrorMessage('', this.verifyresponse.message);
+            const msg = this.switchScanCardErrorMessage(
+              this.verifyresponse.message
+            );
+            this.tr
+              .get(msg)
+              .pipe(this._unsubscribe.takeUntilDestroy)
+              .subscribe({
+                next: (message) => AppUtilities.showErrorMessage('', message),
+                error: (err) => console.error(err),
+              });
             this.input = '';
           }
         },

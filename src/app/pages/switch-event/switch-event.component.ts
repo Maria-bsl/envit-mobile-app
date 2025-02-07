@@ -19,6 +19,7 @@ import {
   IonContent,
   IonText,
   IonButton,
+  NavController,
 } from '@ionic/angular/standalone';
 import { AppConfigService } from 'src/app/services/App-Config/app-config.service';
 import { UnsubscriberService } from 'src/app/services/unsubscriber/unsubscriber.service';
@@ -58,8 +59,15 @@ export class SwitchEventComponent implements OnInit, OnDestroy {
     private service: ServiceService,
     private appConfig: AppConfigService,
     private _unsubscriber: UnsubscriberService,
-    private loadingService: LoadingService
-  ) {}
+    private loadingService: LoadingService,
+    private navCtrl: NavController
+  ) {
+    const backButton = () => {
+      const backToLogin = () => new Promise<void>((r, j) => r());
+      this.appConfig.backButtonEventHandler(backToLogin);
+    };
+    backButton();
+  }
   ngOnInit() {
     try {
       this.eventsList = JSON.parse(
@@ -67,7 +75,7 @@ export class SwitchEventComponent implements OnInit, OnDestroy {
           AppUtilities.EVENT_DETAILS_LIST
         )
       );
-      if (!this.eventsList) this.router.navigate(['login']);
+      if (!this.eventsList) this.navCtrl.navigateRoot('/login');
       const eventId = this.appConfig.getItemFromSessionStorage(
         AppUtilities.EVENT_ID
       );
@@ -109,7 +117,8 @@ export class SwitchEventComponent implements OnInit, OnDestroy {
         AppUtilities.EVENT_ID,
         event.event_id.toString()
       );
-    this.router.navigateByUrl('tabs/dashboard', navigationExtras);
+    this.navCtrl.navigateRoot('tabs/dashboard', navigationExtras);
+    //this.router.navigateByUrl('tabs/dashboard', navigationExtras);
   }
   async openDashboard() {
     if (this.selected === -1) {

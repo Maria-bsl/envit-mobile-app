@@ -26,6 +26,7 @@ import {
   IonContent,
   IonText,
   IonButton,
+  NavController,
 } from '@ionic/angular/standalone';
 import { LoadingService } from 'src/app/services/loading-service/loading.service';
 
@@ -63,10 +64,16 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
     private _unsubscriber: UnsubscriberService,
     private translateConfigService: TranslateConfigService,
     private translate: TranslateService,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
+    private navCtrl: NavController
   ) {
     this.translateConfigService.getDefaultLanguage();
     this.language = this.translateConfigService.getCurrentLang();
+    const backButton = () => {
+      const backToLogin = () => this.router.navigate(['/login']);
+      this.appConfig.backButtonEventHandler(backToLogin);
+    };
+    backButton();
   }
   private createPostDataFormGroup() {
     this.PostData = this.fb.group({
@@ -113,7 +120,7 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
       .catch((err) => console.error(err));
   }
   loginpage() {
-    this.router.navigate(['login']);
+    this.router.navigate(['/login']);
   }
   onResetPasswordClicked() {
     if (this.mobile_number.valid) {

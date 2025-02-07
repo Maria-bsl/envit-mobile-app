@@ -87,6 +87,11 @@ export class LoginComponent implements OnInit {
     private loadingService: LoadingService
   ) {
     this.registerIcons();
+    const backButton = () => {
+      const backToLogin = () => new Promise((r, j) => r(console.log));
+      this._appConfig.backButtonEventHandler(backToLogin);
+    };
+    backButton();
     this.translateConfigService.getDefaultLanguage();
     this.language = this.translateConfigService.getCurrentLang();
     this.createLoginFormGroup();
@@ -102,7 +107,8 @@ export class LoginComponent implements OnInit {
     });
   }
   private registerIcons() {
-    this._appConfig.addIcons(['lock', 'eye', 'eye-off'], '/assets/feather/');
+    const icons = ['lock', 'eye', 'eye-off'];
+    this._appConfig.addIcons(icons, '/assets/feather');
   }
   private parseLoginResponse(res: LoginResponse) {
     this._appConfig.addSessionStorageItem(

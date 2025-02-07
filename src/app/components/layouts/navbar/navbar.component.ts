@@ -4,7 +4,6 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { Router, RouterModule } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { IonicModule, LoadingController } from '@ionic/angular';
 import { AppUtilities } from 'src/app/core/utils/AppUtilities';
 import { TranslateConfigService } from 'src/app/translate-config.service';
 import { SelectLanguageDialogComponent } from '../../dialogs/select-language-dialog/select-language-dialog.component';
@@ -19,15 +18,22 @@ import { finalize, from, switchMap, tap, timer, zip } from 'rxjs';
 import { UnsubscriberService } from 'src/app/services/unsubscriber/unsubscriber.service';
 import { MatRipple } from '@angular/material/core';
 import { LoadingService } from 'src/app/services/loading-service/loading.service';
+import {
+  NavController,
+  IonHeader,
+  IonText,
+  IonToolbar,
+} from '@ionic/angular/standalone';
+
 @Component({
   selector: 'app-navbar',
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss'],
   standalone: true,
   imports: [
+    IonHeader,
     MatMenuModule,
     MatButtonModule,
-    IonicModule,
     RouterModule,
     TranslateModule,
     MatDialogModule,
@@ -35,6 +41,8 @@ import { LoadingService } from 'src/app/services/loading-service/loading.service
     MatIconModule,
     MatSnackBarModule,
     MatRipple,
+    IonText,
+    IonToolbar,
   ],
 })
 export class NavbarComponent implements OnInit {
@@ -52,7 +60,8 @@ export class NavbarComponent implements OnInit {
     private themeManager: ThemeManagerService,
     private _snackbar: MatSnackBar,
     private _unsubscriber: UnsubscriberService,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
+    private navCtrl: NavController
   ) {
     addIcons({ personCircle });
     this.registerIcons();
@@ -101,10 +110,10 @@ export class NavbarComponent implements OnInit {
   }
   ngOnInit() {}
   changepass() {
-    this.router.navigate(['changepwd']);
+    this.navCtrl.navigateRoot('/changepwd');
   }
   switchEvent() {
-    this.router.navigate(['switch']);
+    this.navCtrl.navigateRoot('/switch');
   }
   openChangeLanguage() {
     let dialogRef = this.dialog.open(SelectLanguageDialogComponent, {
@@ -123,7 +132,7 @@ export class NavbarComponent implements OnInit {
   logoClicked() {
     if (this.router.url === '/switch') {
     } else {
-      this.router.navigate(['/tabs/dashboard']);
+      this.navCtrl.navigateRoot('/tabs/dashboard');
     }
   }
   logout() {

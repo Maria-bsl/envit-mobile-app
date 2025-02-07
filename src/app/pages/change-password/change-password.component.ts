@@ -12,7 +12,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { IonicModule, LoadingController } from '@ionic/angular';
-import { Router } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AppUtilities } from 'src/app/core/utils/AppUtilities';
 import { ServiceService } from 'src/app/services/service.service';
@@ -32,6 +32,7 @@ import {
   IonButton,
   IonIcon,
   IonContent,
+  Platform,
 } from '@ionic/angular/standalone';
 import { LoadingService } from 'src/app/services/loading-service/loading.service';
 
@@ -66,19 +67,27 @@ export class ChangePasswordComponent implements OnInit {
   resp: any;
   msg: any;
   language: any;
+  private history: string[] = [];
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private service: ServiceService,
     private appConfig: AppConfigService,
     //private loadingCtrl: LoadingController,
-    private location: Location,
+    private loc: Location,
     private translateConfigService: TranslateConfigService,
     private _unsubscriber: UnsubscriberService,
     private translate: TranslateService,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
+    private platform: Platform
   ) {
     addIcons({ arrowBack });
+    const backButton = () => {
+      const backToLogin = () => 0;
+      this.platform.backButton.subscribeWithPriority(0, () => {});
+      //this.appConfig.backButtonEventHandler(backToLogin);
+    };
+    backButton();
     this.translateConfigService.getDefaultLanguage();
     this.language = this.translateConfigService.getCurrentLang();
   }
@@ -156,7 +165,7 @@ export class ChangePasswordComponent implements OnInit {
     });
   }
   backBtn() {
-    this.location.back();
+    this.loc.back();
   }
   get current_password() {
     return this.postData.get('current_password') as FormControl;

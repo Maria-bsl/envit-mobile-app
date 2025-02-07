@@ -37,13 +37,9 @@ export class LoadingService {
       disableClose: true,
     });
     const LIMIT = 30000;
-    setTimeout(() => {
-      this.isLoading()
-        .then((isLoading) => isLoading && this.dismiss())
-        .catch((err) => {
-          console.error(err);
-          this.dismiss();
-        });
+    setTimeout(async () => {
+      const isLoading = await this.isLoading();
+      isLoading && this.dismiss();
     }, LIMIT);
     this.loading$.next(dialogRef);
     return firstValueFrom(this.loading$.asObservable());

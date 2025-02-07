@@ -76,4 +76,12 @@ export class AppConfigService {
     const item = sessionStorage.getItem(key);
     return item ?? '';
   }
+  backButtonEventHandler(callback: () => {}) {
+    this.platform.backButton.subscribeWithPriority(0, () => {
+      callback();
+    });
+  }
+  getPreviousRoute(history: string[]): string {
+    return history.length > 1 ? history[history.length - 2] : '';
+  }
 }

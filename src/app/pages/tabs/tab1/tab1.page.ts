@@ -174,7 +174,6 @@ export class Tab1Page implements OnInit, AfterViewInit, AfterViewChecked {
     private appConfig: AppConfigService,
     private service: ServiceService,
     private router: Router,
-    private route: ActivatedRoute,
     public platform: Platform,
     private iconRegistry: MatIconRegistry,
     private sanitizer: DomSanitizer,
@@ -184,6 +183,11 @@ export class Tab1Page implements OnInit, AfterViewInit, AfterViewChecked {
     private loadingService: LoadingService,
     private sharedService: SharedService
   ) {
+    const backButton = () => {
+      const backToLogin = () => new Promise<void>((r, j) => r());
+      this.appConfig.backButtonEventHandler(backToLogin);
+    };
+    backButton();
     this.registerIcons();
   }
   private barcodeScannerReadyEventListener() {
@@ -330,16 +334,6 @@ export class Tab1Page implements OnInit, AfterViewInit, AfterViewChecked {
         opacity: 1,
       },
     };
-    // self.chartOptions.subtitle = {
-    //   verticalAlign: 'middle',
-    //   floating: true,
-    //   text: this._trPipe.transform('dashboardPage.topBanner.chart.total'),
-    //   y: 80,
-    //   style: {
-    //     fontSize: '16px',
-    //     color: 'var(--sys-shadow)',
-    //   },
-    // };
     self.chartOptions.series = [
       {
         type: 'pie',

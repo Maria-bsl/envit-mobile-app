@@ -9,7 +9,8 @@
     "errors": {
       "pleaseFill": "Tafadhali jaza",
       "failed": "Imeshindwa",
-      "unexpectedError": "Kosa lisilotarajiwa lilitokea. Tafadhali jaribu tena au wasiliana na msaada."
+      "unexpectedError": "Kosa lisilotarajiwa lilitokea. Tafadhali jaribu tena au wasiliana na msaada.",
+      "connectionFailed": "Tafadhali thibitisha muunganisho wako wa mtandao au jaribu tena."
     },
     "labels": {
       "filterNoDataFound": "Hakuna data inayolingana na kichujio",
@@ -66,13 +67,17 @@
       },
       "errors": {
         "invalidPhoneNumber": "Namba ya simu batili",
-        "loginFailed": "Kuingia Imeshindwa"
+        "loginFailed": "Kuingia Imeshindwa",
+        "loginFailedContactSupport": "Umeshindwa kuingia. Tafadhali jaribu tena au wasiliana na timu yetu ya msaada.",
+        "invalidUsernameOrPassword": "Nambari ya simu batili au nenosiri."
       }
     }
   },
   "switchEvent": {
     "welcomeText": "Karibu",
-    "selectEventText": "Tafadhali chagua tukio la kuendelea."
+    "selectEventText": "Tafadhali chagua tukio la kuendelea.",
+    "pleaseSelectEvent": "Tafadhali chagua tukio",
+    "eventNotExist": "Tukio hili halikuweza kupatikana."
   },
   "dashboardPage": {
     "topBanner": {
@@ -94,7 +99,10 @@
       "Imethibitishwa na"
     ],
     "cameraPermissionDenied": "Ruhusa ya kamera imekataliwa.",
-    "failedToReadQrCode": "Imeshindwa kusoma msimbo wa qr."
+    "failedToReadQrCode": "Imeshindwa kusoma msimbo wa qr.",
+    "errors": {
+      "failedToFetchInvitees": "Imeshindwa kupata waalikwa. Tafadhali jaribu tena baadaye."
+    }
   },
   "qrpage": {
     "invitee": "Jina",
@@ -119,7 +127,9 @@
         "serialNumber": "Namba ya mwaliko"
       },
       "errors": {
-        "serialNumber": "Tafadhali ingiza nambari ya serial"
+        "serialNumber": "Tafadhali ingiza nambari ya serial",
+        "inviteeNotExist": "Samahani, mwaliko haupo.",
+        "codeNotFound": "Samahani, uhifadhi wa tukio haukuweza kupatikana."
       }
     },
     "actions": {
@@ -141,13 +151,16 @@
       },
       "errors": {
         "emptyNumberOfInvitees": "Tafadhali ingia kwenye waalikwa.",
-        "numberOfInviteesExceeded": "Idadi kubwa ya waalikwa"
+        "numberOfInviteesExceeded": "Idadi kubwa ya waalikwa",
+        "invalidVerificationDate": "Samahani, uthibitisho wa kadi lazima uwe tarehe ya tukio.",
+        "failedToVerifyCard": "Uthibitishaji wa kadi umeshindwa bila kutarajia, tafadhali jaribu tena au msaada wa mawasiliano."
       }
     }
   },
   "tabs2": {
     "title": "Orodha ya wageni",
-    "visitorsList": ["Jina la Mgeni", "Simu", "Idadi", "Meza"]
+    "visitorsList": ["Jina la Mgeni", "Simu", "Idadi", "Meza"],
+    "failedToFindVisitorsList": "Imeshindwa kupata wageni"
   },
   "registrationPage": {
     "title": "Ongeza mwalikwa mpya",

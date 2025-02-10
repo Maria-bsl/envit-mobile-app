@@ -5,11 +5,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatListModule } from '@angular/material/list';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslatePipe } from '@ngx-translate/core';
 import { IonicModule, LoadingController } from '@ionic/angular';
 import { NavbarComponent } from 'src/app/components/layouts/navbar/navbar.component';
 import { Router, NavigationExtras } from '@angular/router';
-import { Subscription, finalize } from 'rxjs';
+import { Subscription, catchError, finalize, mergeMap } from 'rxjs';
 //import { EventDetailsResponse } from 'src/app/core/interfaces/EventDetailsResponse';
 import { AppUtilities } from 'src/app/core/utils/AppUtilities';
 //import { EventChoice } from 'src/app/services/params/eventschoice';
@@ -25,7 +25,12 @@ import { AppConfigService } from 'src/app/services/App-Config/app-config.service
 import { UnsubscriberService } from 'src/app/services/unsubscriber/unsubscriber.service';
 import { EventDetailsResponse } from 'src/app/core/responses/LoginResponse';
 import { FEventChoice } from 'src/app/core/forms/f-events-choice';
-import { LoadingService } from 'src/app/services/loading-service/loading.service';
+import {
+  filterNotNull,
+  LoadingService,
+} from 'src/app/services/loading-service/loading.service';
+import { HttpErrorResponse } from '@angular/common/http';
+import { IEventOfChoice } from 'src/app/core/responses/event-of-choice';
 
 @Component({
   selector: 'app-switch-event',
@@ -47,20 +52,21 @@ import { LoadingService } from 'src/app/services/loading-service/loading.service
     NavbarComponent,
     TranslateModule,
   ],
+  providers: [TranslatePipe],
 })
 export class SwitchEventComponent implements OnInit, OnDestroy {
   selected: number = -1;
   eventsList: EventDetailsResponse[] = [];
-  subscriptions: Subscription[] = [];
   @ViewChild('ionLoading') ionLoading!: IonLoading;
   constructor(
     private router: Router,
     private controller: LoadingController,
     private service: ServiceService,
     private appConfig: AppConfigService,
-    private _unsubscriber: UnsubscriberService,
+    private _unsubscribe: UnsubscriberService,
     private loadingService: LoadingService,
-    private navCtrl: NavController
+    private navCtrl: NavController,
+    private _trPipe: TranslatePipe
   ) {
     const backButton = () => {
       const backToLogin = () => new Promise<void>((r, j) => r());
@@ -89,25 +95,22 @@ export class SwitchEventComponent implements OnInit, OnDestroy {
       this.eventsList = [];
     }
   }
-  ngOnDestroy(): void {
-    this.subscriptions.forEach((s) => s.unsubscribe());
-  }
+  ngOnDestroy(): void {}
   eventChanged(index: any) {
     if (index < 0 || index > this.eventsList.length - 1)
       throw Error('Event index is out of range.');
     this.selected = index;
     const event = this.eventsList.at(this.selected);
-    if (event) {
+    event &&
       this.appConfig.addSessionStorageItem(
         AppUtilities.EVENT_NAME,
         event.event_name
       );
-    }
   }
-  openSelectedEvent(selected: EventDetailsResponse) {
+  openSelectedEvent(eventId: number) {
     const navigationExtras: NavigationExtras = {
       state: {
-        data_from_user: selected.event_id,
+        data_from_user: eventId,
       },
       replaceUrl: true,
     };
@@ -115,51 +118,75 @@ export class SwitchEventComponent implements OnInit, OnDestroy {
     event &&
       this.appConfig.addSessionStorageItem(
         AppUtilities.EVENT_ID,
-        event.event_id.toString()
+        eventId.toString()
       );
-    this.navCtrl.navigateRoot('tabs/dashboard', navigationExtras);
-    //this.router.navigateByUrl('tabs/dashboard', navigationExtras);
+    this.router.navigate(['/tabs/dashboard'], { ...navigationExtras });
   }
-  async openDashboard() {
-    if (this.selected === -1) {
-      AppUtilities.showWarningMessage('', 'Please select an event');
-      return;
-    }
-    const selected: EventDetailsResponse = this.eventsList.at(this.selected)!;
-    const tokenName = this.appConfig.getItemFromSessionStorage(
-      AppUtilities.TOKEN_NAME
+  openDashboard(event: MouseEvent) {
+    const params = (mobile: string, eventId: string): FEventChoice => {
+      return {
+        mobile_number: mobile,
+        event_id: eventId,
+      };
+    };
+    const tokenName = (token: string) => {
+      return this.appConfig.getItemFromSessionStorage(token) ?? '';
+    };
+    const erroneousRes = async (err: HttpErrorResponse | any) => {
+      const httpDataResponseSwitch = (e: HttpErrorResponse) => {
+        switch (e.status) {
+          case 404:
+            AppUtilities.showErrorMessage(
+              '',
+              this._trPipe.transform('switchEvent.eventNotExist')
+            );
+            break;
+          case 0:
+            AppUtilities.showErrorMessage(
+              '',
+              this._trPipe.transform('defaults.errors.connectionFailed')
+            );
+            break;
+        }
+      };
+      if (err instanceof HttpErrorResponse) {
+        httpDataResponseSwitch(err);
+      } else {
+      }
+    };
+    const selected: EventDetailsResponse | undefined = this.eventsList.at(
+      this.selected
     );
-    if (tokenName) {
-      const params = {
-        mobile_number: JSON.parse(tokenName).mobile,
-        event_id: selected.event_id.toString(),
-      } as FEventChoice;
-      this.loadingService.startLoading().then(() => {
-        this.service
-          .EventChoices(params)
-          .pipe(
-            this._unsubscriber.takeUntilDestroy,
-            finalize(() => this.loadingService.dismiss())
+    const parseResponse = (result: void | IEventOfChoice) => {
+      if (!result) return;
+      this.appConfig.addSessionStorageItem(
+        AppUtilities.TOKEN_user,
+        result.user_id!.toString()
+      );
+      this.appConfig.addSessionStorageItem(
+        AppUtilities.TOKEN_Cstomer,
+        result.customer_admin_id!.toString()
+      );
+      selected && this.openSelectedEvent(selected.event_id);
+    };
+    !selected &&
+      AppUtilities.showWarningMessage('', 'switchEvent.pleaseSelectEvent');
+    if (selected) {
+      const mobile = JSON.parse(tokenName(AppUtilities.TOKEN_NAME)).mobile;
+      const eventId = selected?.event_id?.toString();
+      this.loadingService
+        .beginLoading()
+        .pipe(
+          this._unsubscribe.takeUntilDestroy,
+          mergeMap((loading) =>
+            this.service.EventChoices(params(mobile, eventId)).pipe(
+              finalize(() => loading.close()),
+              catchError((err) => erroneousRes(err)),
+              filterNotNull()
+            )
           )
-          .subscribe({
-            next: (result: any) => {
-              this.appConfig.addSessionStorageItem(
-                AppUtilities.TOKEN_user,
-                result.user_id.toString()
-              );
-              this.appConfig.addSessionStorageItem(
-                AppUtilities.TOKEN_Cstomer,
-                result.customer_admin_id.toString()
-              );
-            },
-            error: (error) => {
-              throw error;
-            },
-            complete: () => {
-              this.openSelectedEvent(selected);
-            },
-          });
-      });
+        )
+        .subscribe(parseResponse);
     }
   }
 }

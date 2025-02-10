@@ -16,15 +16,23 @@ import { NavbarComponent } from 'src/app/components/layouts/navbar/navbar.compon
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import {
+  TranslateModule,
+  TranslatePipe,
+  TranslateService,
+} from '@ngx-translate/core';
 import { Router, NavigationExtras } from '@angular/router';
-import { Subscription, finalize, from } from 'rxjs';
+import { Subscription, catchError, finalize, from, mergeMap } from 'rxjs';
 import { AppUtilities } from 'src/app/core/utils/AppUtilities';
 import { ServiceService } from 'src/app/services/service.service';
 import { AppConfigService } from 'src/app/services/App-Config/app-config.service';
 import { UnsubscriberService } from 'src/app/services/unsubscriber/unsubscriber.service';
-import { LoadingService } from 'src/app/services/loading-service/loading.service';
+import {
+  filterNotNull,
+  LoadingService,
+} from 'src/app/services/loading-service/loading.service';
 import { SharedService } from 'src/app/services/shared-service/shared.service';
+import { IReadQrCode } from 'src/app/core/responses/read-qr-code';
 
 @Component({
   selector: 'app-verify-code',
@@ -49,6 +57,7 @@ import { SharedService } from 'src/app/services/shared-service/shared.service';
     FormsModule,
     TranslateModule,
   ],
+  providers: [TranslatePipe],
 })
 export class VerifyCodeComponent implements OnInit, OnDestroy {
   subsriptions: Subscription[] = [];
@@ -78,7 +87,8 @@ export class VerifyCodeComponent implements OnInit, OnDestroy {
     private translate: TranslateService,
     private _unsubscriber: UnsubscriberService,
     private loadingService: LoadingService,
-    private sharedService: SharedService
+    private sharedService: SharedService,
+    private _trPipe: TranslatePipe
   ) {}
   postData = {
     qrcode: '',
@@ -116,54 +126,51 @@ export class VerifyCodeComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.subsriptions.forEach((s) => s.unsubscribe());
   }
-  sendQr() {
+  sendQr(event: Event) {
+    const erroneousRes = async (err: any) => {
+      switch (err.error.message.toLocaleLowerCase()) {
+        case 'Failed! Invitee does not exist.'.toLocaleLowerCase():
+          AppUtilities.showErrorMessage(
+            '',
+            this._trPipe.transform('verifyCode.form.errors.inviteeNotExist')
+          );
+          break;
+        default:
+          AppUtilities.showErrorMessage(
+            '',
+            this._trPipe.transform('verifyCode.form.errors.codeNotFound')
+          );
+          break;
+      }
+    };
+    const success = (result: void | IReadQrCode) => {
+      if (!result) return;
+      const navigationExtras: NavigationExtras = {
+        state: {
+          qrinfo: result,
+          qrcode: this.postData.qrcode,
+        },
+      };
+      if (result.unchecked_invitee === 1) {
+        this.verifyOneVisitor();
+      } else {
+        this.router.navigate(['tabs/tab2/verifyuser'], navigationExtras);
+      }
+    };
     const body = { qr_code: this.postData.qrcode, event_id: this.event_id };
-    this.loadingService.startLoading().then((loading) => {
-      const native = from(this.service.sendQr(body));
-      native
-        .pipe(
-          this._unsubscriber.takeUntilDestroy,
-          finalize(() => this.loadingService.dismiss())
+    this.loadingService
+      .beginLoading()
+      .pipe(
+        this._unsubscriber.takeUntilDestroy,
+        mergeMap((loading) =>
+          this.service.sendQr(body).pipe(
+            finalize(() => loading.close()),
+            catchError((err) => erroneousRes(err)),
+            filterNotNull()
+          )
         )
-        .subscribe({
-          next: (res) => {
-            this.result = res;
-            this.qrResponse = this.result;
-            if (this.result.message) {
-              AppUtilities.showErrorMessage('', this.result.message);
-            } else if (this.qrResponse) {
-              const navigationExtras: NavigationExtras = {
-                state: {
-                  qrinfo: this.qrResponse,
-                  qrcode: this.postData.qrcode,
-                },
-              };
-              if (this.qrResponse.unchecked_invitee == 1) {
-                this.verifyOneVisitor();
-              } else {
-                this.router.navigate(
-                  ['tabs/tab2/verifyuser'],
-                  navigationExtras
-                );
-              }
-            }
-          },
-          error: (err) => {
-            if (err.error.errorList) {
-              let messages = err.error.errorList;
-              AppUtilities.showErrorMessage(messages[0], '');
-            } else if (err.error.message) {
-              AppUtilities.showErrorMessage(err.error.message, '');
-            } else {
-              this.translate.get('defaults.errors.failed').subscribe({
-                next: (message) => {
-                  AppUtilities.showErrorMessage(message, '');
-                },
-              });
-            }
-          },
-        });
-    });
+      )
+      .subscribe(success);
   }
   private openDashboard() {
     this.router
@@ -177,70 +184,67 @@ export class VerifyCodeComponent implements OnInit, OnDestroy {
     this.userId = this.appConfig.getItemFromSessionStorage(
       AppUtilities.TOKEN_user
     );
-    this.visitor_id = this.qrResponse.visitor_id;
-
+    const erroneousRes = async (err: any) => {
+      switch (err.error.message.toLocaleLowerCase()) {
+        case 'Failed! Invitee does not exist.'.toLocaleLowerCase():
+          AppUtilities.showErrorMessage(
+            '',
+            this._trPipe.transform('verifyCode.form.errors.inviteeNotExist')
+          );
+          break;
+        case 'Failed! Card verification must be on date of event.'.toLocaleLowerCase():
+          AppUtilities.showErrorMessage(
+            '',
+            this._trPipe.transform(
+              'verifyUser.form.errors.invalidVerificationDate'
+            )
+          );
+          break;
+        default:
+          AppUtilities.showErrorMessage(
+            '',
+            this._trPipe.transform('verifyUser.form.errors.failedToVerifyCard')
+          );
+          break;
+      }
+    };
+    const success = (result: any) => {
+      if (result.status === 1) {
+        AppUtilities.showSuccessMessage(
+          '',
+          this._trPipe.transform('qrpage.successfullyScanned')
+        );
+        this.openDashboard();
+        this.input = '';
+      } else {
+        const message = this.switchScanCardErrorMessage(result.message);
+        AppUtilities.showErrorMessage('', message);
+        this.input = '';
+      }
+    };
     const params = {
       event_id: this.event_id,
       qr_code: this.postData.qrcode,
       Number_Of_CheckingIn_Invitees: '1',
       User_Id: this.userId,
     };
-    this.loadingService.startLoading().then((loading) => {
-      let native = from(this.service.verifyQr(params));
-      native
-        .pipe(
-          this._unsubscriber.takeUntilDestroy,
-          finalize(() => this.loadingService.dismiss())
+    this.loadingService
+      .beginLoading()
+      .pipe(
+        this._unsubscriber.takeUntilDestroy,
+        mergeMap((loading) =>
+          this.service.verifyQr(params).pipe(
+            this._unsubscriber.takeUntilDestroy,
+            mergeMap((loading) =>
+              this.service.verifyQr(params).pipe(
+                finalize(() => loading.close()),
+                catchError((err) => erroneousRes(err)),
+                filterNotNull()
+              )
+            )
+          )
         )
-        .subscribe({
-          next: (res) => {
-            this.verifyresponse = res;
-            if (this.verifyresponse.status == 1) {
-              this.tr
-                .get('qrpage.successfullyScanned')
-                .pipe(this._unsubscriber.takeUntilDestroy)
-                .subscribe({
-                  next: (message) => {
-                    AppUtilities.showSuccessMessage('', message);
-                    this.openDashboard();
-                  },
-                  error: (err) => console.error(err),
-                });
-              this.input = '';
-              ``;
-            } else {
-              const msg = this.switchScanCardErrorMessage(
-                this.verifyresponse.message
-              );
-              this.tr
-                .get(msg)
-                .pipe(this._unsubscriber.takeUntilDestroy)
-                .subscribe({
-                  next: (message) => AppUtilities.showErrorMessage('', message),
-                  error: (err) => console.error(err),
-                });
-              this.input = '';
-            }
-          },
-          error: (err) => {
-            if (err.error.errorList) {
-              let messages = err.error.errorList;
-              AppUtilities.showErrorMessage(messages[0], '');
-            } else if (err.error.message) {
-              AppUtilities.showErrorMessage(err.error.message, '');
-            } else {
-              this.translate.get('defaults.errors.failed').subscribe({
-                next: (message) => {
-                  AppUtilities.showErrorMessage(message, '');
-                },
-              });
-            }
-            this.router.navigate(['tabs/dashboard']);
-          },
-        });
-    });
-  }
-  changepass() {
-    this.router.navigate(['changepwd']);
+      )
+      .subscribe(success);
   }
 }

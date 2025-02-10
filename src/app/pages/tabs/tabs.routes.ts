@@ -7,6 +7,18 @@ export const routes: Routes = [
     component: TabsPage,
     children: [
       {
+        path: '',
+        redirectTo: 'switch',
+        pathMatch: 'full',
+      },
+      // {
+      //   path: 'switch',
+      //   loadComponent: () =>
+      //     import('../switch-event/switch-event.component').then(
+      //       (m) => m.SwitchEventComponent
+      //     ),
+      // },
+      {
         path: 'dashboard',
         loadComponent: () => import('./tab1/tab1.page').then((m) => m.Tab1Page),
       },
@@ -34,16 +46,11 @@ export const routes: Routes = [
         path: 'tab3',
         loadComponent: () => import('./tab3/tab3.page').then((m) => m.Tab3Page),
       },
-      {
-        path: '',
-        redirectTo: '/tabs/tab1',
-        pathMatch: 'full',
-      },
     ],
   },
-  {
-    path: '',
-    redirectTo: '/tabs/tab1',
-    pathMatch: 'full',
-  },
+  // {
+  //   path: '',
+  //   redirectTo: '/tabs/tab1',
+  //   pathMatch: 'full',
+  // },
 ];

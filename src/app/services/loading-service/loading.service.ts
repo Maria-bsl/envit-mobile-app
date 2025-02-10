@@ -1,8 +1,34 @@
 import { Injectable } from '@angular/core';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import {
+  MatDialog,
+  MatDialogRef,
+  MatDialogState,
+} from '@angular/material/dialog';
 import { LoadingDialogComponent } from '../../components/dialogs/loading-dialog/loading-dialog.component';
-import { BehaviorSubject, firstValueFrom, lastValueFrom, tap } from 'rxjs';
+import {
+  BehaviorSubject,
+  concatMap,
+  filter,
+  firstValueFrom,
+  lastValueFrom,
+  mergeMap,
+  Observable,
+  of,
+  OperatorFunction,
+  ReplaySubject,
+  Subject,
+  switchMap,
+  tap,
+  timer,
+} from 'rxjs';
 import { UnsubscriberService } from '../unsubscriber/unsubscriber.service';
+
+export const filterNotNull =
+  <T>(): OperatorFunction<T, Exclude<T, null | undefined>> =>
+  (source$) =>
+    source$.pipe(
+      filter((value) => value !== null && value !== undefined)
+    ) as Observable<Exclude<T, null | undefined>>;
 
 @Injectable({
   providedIn: 'root',
@@ -11,10 +37,25 @@ export class LoadingService {
   loading$ = new BehaviorSubject<
     false | MatDialogRef<LoadingDialogComponent, any>
   >(false);
+  load$ = new ReplaySubject<MatDialogRef<LoadingDialogComponent, any>>();
+  private _loading$ = this.load$.asObservable();
   constructor(
     private readonly _dialog: MatDialog,
     private unsubscribe: UnsubscriberService
-  ) {}
+  ) {
+    const loaderTimeout = (LIMIT: number) => {
+      this._loading$
+        .pipe(
+          filterNotNull(),
+          switchMap((loading) =>
+            timer(LIMIT).pipe(tap(() => loading && loading.close()))
+          ),
+          concatMap(() => [])
+        )
+        .subscribe();
+    };
+    loaderTimeout(30000);
+  }
   private stopLoading() {
     let promise = firstValueFrom(this.loading$.asObservable());
     promise
@@ -43,6 +84,23 @@ export class LoadingService {
     }, LIMIT);
     this.loading$.next(dialogRef);
     return firstValueFrom(this.loading$.asObservable());
+  }
+  beginLoading() {
+    const dialogRef = this._dialog.open(LoadingDialogComponent, {
+      panelClass: 'dialog-loading-panel-class',
+      disableClose: true,
+    });
+    const ref$ = of(dialogRef);
+    ref$
+      .pipe(
+        filterNotNull(),
+        switchMap((loading) =>
+          timer(30000).pipe(tap(() => loading && loading.close()))
+        ),
+        concatMap(() => [])
+      )
+      .subscribe();
+    return ref$;
   }
   dismiss() {
     this.stopLoading();

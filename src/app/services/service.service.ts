@@ -1,10 +1,17 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { catchError, delay, Observable, retry, Subject } from 'rxjs';
+import { catchError, delay, Observable, of, retry, Subject } from 'rxjs';
 import { FEventChoice } from '../core/forms/f-events-choice';
 import { QrCode } from './params/qrcode';
 import { QrVerify } from './params/verify';
 import { LoginResponse } from '../core/responses/LoginResponse';
+import { IEventOfChoice } from '../core/responses/event-of-choice';
+import {
+  ICheckedInvitee,
+  ICheckedInviteeRes,
+} from '../core/responses/checked-invitees';
+import { IInviteeRes } from '../core/responses/invitee';
+import { IReadQrCode } from '../core/responses/read-qr-code';
 
 @Injectable({
   providedIn: 'root',
@@ -46,42 +53,44 @@ export class ServiceService {
     return this.performPost(url, body, {});
   }
 
-  EventChoices(body: FEventChoice) {
+  EventChoices(body: FEventChoice): Observable<IEventOfChoice> {
     const url = `${this.base_urls}/api/event-of-choice`;
     return this.performPost(url, body, {});
   }
-  sendQr(qr: QrCode) {
+  sendQr(qr: QrCode): Observable<IReadQrCode> {
     try {
-      //this._refreshNeeded$.next();
-      return this.https.post(this.base_urls + '/api/read-qr-code', qr);
+      const url = `${this.base_urls}/api/read-qr-code`;
+      return this.performPost(url, qr, {});
     } catch {
       this._refreshNeeded$.next();
-      return Promise.resolve();
+      return of();
     }
   }
-  verifyQr(verify: QrVerify) {
+  verifyQr(body: QrVerify): Observable<any> {
     try {
-      return this.https.post(
-        this.base_urls + '/api/invitees-verification',
-        verify
+      const url = `${this.base_urls}/api/invitees-verification`;
+      return this.performPost(url, body, {});
+    } catch {
+      this._refreshNeeded$.next();
+      return of();
+    }
+  }
+  inviteeChecked(eventId: string): Observable<ICheckedInviteeRes> {
+    try {
+      return this.https.get(
+        `${this.base_urls}/api/checked-in-invitees/${eventId}`,
+        {}
       );
-    } catch {
-      this._refreshNeeded$.next();
-      return Promise.resolve();
+    } catch (error) {
+      return of();
     }
   }
-  inviteeChecked(eventId: any) {
-    return this.https.get(
-      this.base_urls + '/api/checked-in-invitees/' + eventId,
-      {}
-    );
-  }
-  getAllinvitee(eventId: any) {
+  getAllInvitees(eventId: string): Observable<IInviteeRes> {
     try {
-      return this.https.get(this.base_urls + '/api/invitees/' + eventId, {});
+      return this.https.get(`${this.base_urls}/api/invitees/${eventId}`, {});
     } catch {
       this._refreshNeeded$.next();
-      return Promise.resolve();
+      return of();
     }
   }
   Forgetpwd(Mob_num: any) {

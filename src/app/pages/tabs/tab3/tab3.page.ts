@@ -36,12 +36,16 @@ import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import {
+  TranslateModule,
+  TranslatePipe,
+  TranslateService,
+} from '@ngx-translate/core';
 import { NavbarComponent } from 'src/app/components/layouts/navbar/navbar.component';
 import { MatTableDataSource } from '@angular/material/table';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Router, NavigationExtras } from '@angular/router';
-import { Subscription, finalize, from } from 'rxjs';
+import { Subscription, catchError, finalize, from, mergeMap } from 'rxjs';
 import { InviteesTable } from 'src/app/core/enums/invitees-table';
 import { AppUtilities } from 'src/app/core/utils/AppUtilities';
 import { ServiceService } from 'src/app/services/service.service';
@@ -54,8 +58,13 @@ import {
 import { addIcons } from 'ionicons';
 import { addOutline } from 'ionicons/icons';
 import { MatRippleModule } from '@angular/material/core';
-import { LoadingService } from 'src/app/services/loading-service/loading.service';
+import {
+  filterNotNull,
+  LoadingService,
+} from 'src/app/services/loading-service/loading.service';
 import { SharedService } from 'src/app/services/shared-service/shared.service';
+import { IInviteeRes } from 'src/app/core/responses/invitee';
+import { IReadQrCode } from 'src/app/core/responses/read-qr-code';
 
 @Component({
   selector: 'app-tab3',
@@ -85,6 +94,7 @@ import { SharedService } from 'src/app/services/shared-service/shared.service';
     IonRefresherContent,
     MatRippleModule,
   ],
+  providers: [TranslatePipe],
 })
 export class Tab3Page implements OnInit, OnDestroy, AfterViewInit {
   subscriptions: Subscription[] = [];
@@ -126,7 +136,8 @@ export class Tab3Page implements OnInit, OnDestroy, AfterViewInit {
     private _unsubsriber: UnsubscriberService,
     private loadingService: LoadingService,
     private sharedService: SharedService,
-    private tr: TranslateService
+    private tr: TranslateService,
+    private _trPipe: TranslatePipe
   ) {
     addIcons({ addOutline });
   }
@@ -219,24 +230,42 @@ export class Tab3Page implements OnInit, OnDestroy, AfterViewInit {
     this.event_id = this.appConfig.getItemFromSessionStorage(
       AppUtilities.EVENT_ID
     );
+    const erroneousRes = async (err: any) => {
+      switch (err.error.message.toLocaleLowerCase()) {
+        case 'Failed! Invitee does not exist.'.toLocaleLowerCase():
+          AppUtilities.showErrorMessage(
+            '',
+            this._trPipe.transform('verifyCode.form.errors.inviteeNotExist')
+          );
+          break;
+        default:
+          AppUtilities.showErrorMessage(
+            '',
+            this._trPipe.transform('verifyCode.form.errors.codeNotFound')
+          );
+          break;
+      }
+    };
+    const success = (res: void | IInviteeRes) => {
+      if (!res) return;
+      this.dataSource = new MatTableDataSource(res.visitors ?? []);
+      this.tableLoading = false;
+      this.dataSourceFilter();
+    };
     const body = { event_id: this.event_id };
-    this.loadingService.startLoading().then((loading) => {
-      let native = from(this.service.getAllinvitee(body.event_id));
-      native
-        .pipe(
-          this._unsubsriber.takeUntilDestroy,
-          finalize(() => this.loadingService.dismiss())
+    this.loadingService
+      .beginLoading()
+      .pipe(
+        this._unsubsriber.takeUntilDestroy,
+        mergeMap((loading) =>
+          this.service.getAllInvitees(body.event_id).pipe(
+            finalize(() => loading.close()),
+            catchError((err) => erroneousRes(err)),
+            filterNotNull()
+          )
         )
-        .subscribe({
-          next: (res) => {
-            this.inviteeArr = res;
-            this.listOfInvitee = this.inviteeArr.visitors;
-            this.dataSource = new MatTableDataSource(this.listOfInvitee);
-            this.tableLoading = false;
-            this.dataSourceFilter();
-          },
-        });
-    });
+      )
+      .subscribe(success);
   }
   ngOnDestroy(): void {
     this.subscriptions.forEach((s) => s.unsubscribe());
@@ -256,39 +285,50 @@ export class Tab3Page implements OnInit, OnDestroy, AfterViewInit {
         error: (err) => console.error(err),
       });
   }
-  sendQr(qrcode: any) {
-    const body = { qr_code: qrcode, event_id: this.event_id };
-    this.loadingService.startLoading().then((loading) => {
-      let native = from(this.service.sendQr(body));
-      native
-        .pipe(
-          this._unsubsriber.takeUntilDestroy,
-          finalize(() => this.loadingService.dismiss())
+  sendQr(qrCode: string) {
+    const erroneousRes = async (err: any) => {
+      switch (err.error.message.toLocaleLowerCase()) {
+        case 'Failed! Invitee does not exist.'.toLocaleLowerCase():
+          AppUtilities.showErrorMessage(
+            '',
+            this._trPipe.transform('verifyCode.form.errors.inviteeNotExist')
+          );
+          break;
+        default:
+          AppUtilities.showErrorMessage(
+            '',
+            this._trPipe.transform('verifyCode.form.errors.codeNotFound')
+          );
+          break;
+      }
+    };
+    const success = (result: void | IReadQrCode) => {
+      if (!result) return;
+      const navigationExtras: NavigationExtras = {
+        state: {
+          qrinfo: result,
+          qrcode: qrCode,
+        },
+      };
+      this.router.navigate(['tabs/tab2/verifyuser'], navigationExtras);
+    };
+    const eventId = this.appConfig.getItemFromSessionStorage(
+      AppUtilities.EVENT_ID
+    );
+    const body = { qr_code: qrCode, event_id: eventId };
+    this.loadingService
+      .beginLoading()
+      .pipe(
+        this._unsubsriber.takeUntilDestroy,
+        mergeMap((loading) =>
+          this.service.sendQr(body).pipe(
+            finalize(() => loading.close()),
+            catchError((err) => erroneousRes(err)),
+            filterNotNull()
+          )
         )
-        .subscribe({
-          next: (res) => {
-            this.result = res;
-            this.qrResponse = this.result;
-            if (this.result.message) {
-              AppUtilities.showErrorMessage('', this.result.message);
-            } else if (this.qrResponse) {
-              const navigationExtras: NavigationExtras = {
-                state: {
-                  qrinfo: this.qrResponse,
-                  qrcode: qrcode,
-                },
-              };
-              this.router.navigate(['tabs/tab2/verifyuser'], navigationExtras);
-            }
-          },
-          error: (error) => {
-            this.errMsg = error;
-            this.resp = this.errMsg.error;
-            this.msg = this.resp.message;
-            AppUtilities.showErrorMessage('', this.msg);
-          },
-        });
-    });
+      )
+      .subscribe(success);
   }
   getTableValue(invitee: any, index: number) {
     switch (index) {

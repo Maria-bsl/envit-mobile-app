@@ -3,6 +3,7 @@ import {
   loginPageLanguageGuard,
   selectLanguagePageGuard,
 } from './core/guards/logged-in-guard';
+import { canActivateLogin } from './core/guards/home-guard';
 
 export const routes: Routes = [
   {
@@ -14,7 +15,7 @@ export const routes: Routes = [
     path: 'login',
     loadComponent: () =>
       import('./pages/login/login.component').then((c) => c.LoginComponent),
-    //canActivate: [loginPageLanguageGuard],
+    canActivate: [loginPageLanguageGuard, canActivateLogin],
   },
   {
     path: 'recoverpwd',
@@ -57,7 +58,7 @@ export const routes: Routes = [
       import('./pages/splash-screen-page/splash-screen-page.component').then(
         (c) => c.SplashScreenPageComponent
       ),
-    //canActivate: [selectLanguagePageGuard],
+    canActivate: [selectLanguagePageGuard],
   },
   {
     path: 'tabs',

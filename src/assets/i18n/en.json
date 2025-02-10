@@ -9,7 +9,8 @@
     "errors": {
       "pleaseFill": "Please fill.",
       "failed": "Failed.",
-      "unexpectedError": "An unexpected error occurred. Please try again or contact support."
+      "unexpectedError": "An unexpected error occurred. Please try again or contact support.",
+      "connectionFailed": "Please verify your internet connection or try again."
     },
     "labels": {
       "filterNoDataFound": "No data matching the filter",
@@ -66,13 +67,17 @@
       },
       "errors": {
         "invalidPhoneNumber": "Invalid phone number",
-        "loginFailed": "Login Failed"
+        "loginFailed": "Login Failed.",
+        "loginFailedContactSupport": "You failed to log in. Please try again or contact our support team.",
+        "invalidUsernameOrPassword": "Invalid mobile number or password."
       }
     }
   },
   "switchEvent": {
     "welcomeText": "Welcome",
-    "selectEventText": "Please select an event to continue."
+    "selectEventText": "Please select an event to continue.",
+    "pleaseSelectEvent": "Please select an event",
+    "eventNotExist": "This event could not be found."
   },
   "dashboardPage": {
     "topBanner": {
@@ -89,7 +94,10 @@
     "clickHereToVerifyGuest": "Click here to verify guest",
     "checkedInviteesTable": ["Name", "Scanned", "Table", "Approved"],
     "cameraPermissionDenied": "Camera permissions denied.",
-    "failedToReadQrCode": "Failed to read qr code."
+    "failedToReadQrCode": "Failed to read qr code.",
+    "errors": {
+      "failedToFetchInvitees": "Failed to fetch invitees. Please try again later."
+    }
   },
   "qrpage": {
     "invitee": "Invitee",
@@ -114,7 +122,9 @@
         "serialNumber": "Enter serial number"
       },
       "errors": {
-        "serialNumber": "Please enter serial number"
+        "serialNumber": "Please enter serial number",
+        "inviteeNotExist": "Sorry, invitee does not exist.",
+        "codeNotFound": "Sorry, the event booking could not be found."
       }
     },
     "actions": {
@@ -136,13 +146,16 @@
       },
       "errors": {
         "emptyNumberOfInvitees": "Please enter attending invitees.",
-        "numberOfInviteesExceeded": "Exceeded number of invitees"
+        "numberOfInviteesExceeded": "Exceeded number of invitees",
+        "invalidVerificationDate": "Sorry, card verifications must be on date of event.",
+        "failedToVerifyCard": "Card verification failed unexpectedly, please try again or contact support."
       }
     }
   },
   "tabs2": {
     "title": "List of all invitees",
-    "visitorsList": ["Name", "Mobile", "Size", "Table"]
+    "visitorsList": ["Name", "Mobile", "Size", "Table"],
+    "failedToFindVisitorsList": "Failed to find visitors"
   },
   "tab3": {
     "sureRegisterVisitor": "Are you sure you want to register {{}} to the event?"

@@ -6,7 +6,7 @@
       <ion-text class="mat-display-medium">E - n v i t</ion-text>
     </div>
     <form
-      (ngSubmit)="onClickLogin()"
+      (ngSubmit)="signUserIn($event)"
       [formGroup]="loginForm"
       id="form"
       class="d-flex flex-column"

@@ -21,6 +21,7 @@ import {
   IonGrid,
   IonRow,
   IonCol,
+  Platform,
 } from '@ionic/angular/standalone';
 import { ExploreContainerComponent } from '../../../explore-container/explore-container.component';
 import { CommonModule } from '@angular/common';
@@ -36,7 +37,6 @@ import {
   TranslateService,
 } from '@ngx-translate/core';
 import { NavbarComponent } from 'src/app/components/layouts/navbar/navbar.component';
-import { IonicModule, LoadingController, Platform } from '@ionic/angular';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatSliderModule } from '@angular/material/slider';
@@ -58,6 +58,8 @@ import {
   of,
   throwError,
   fromEvent,
+  mergeMap,
+  catchError,
 } from 'rxjs';
 import { AppUtilities } from 'src/app/core/utils/AppUtilities';
 import { ServiceService } from 'src/app/services/service.service';
@@ -80,8 +82,16 @@ import { MatGridListModule } from '@angular/material/grid-list';
 import { AppConfigService } from 'src/app/services/App-Config/app-config.service';
 import { UnsubscriberService } from 'src/app/services/unsubscriber/unsubscriber.service';
 import { StylePaginatorDirective } from 'src/app/core/directives/style-paginator.directive';
-import { LoadingService } from 'src/app/services/loading-service/loading.service';
+import {
+  filterNotNull,
+  LoadingService,
+} from 'src/app/services/loading-service/loading.service';
 import { SharedService } from 'src/app/services/shared-service/shared.service';
+import {
+  ICheckedInvitee,
+  ICheckedInviteeRes,
+} from 'src/app/core/responses/checked-invitees';
+import { IInviteeRes } from 'src/app/core/responses/invitee';
 
 @Component({
   selector: 'app-tab1',
@@ -127,20 +137,18 @@ export class Tab1Page implements OnInit, AfterViewInit, AfterViewChecked {
     CheckedInviteesTableKeys.VERIFIED_BY,
   ];
   qrText: string = '';
-  listOfInvitee: any;
+  //listOfInvitee: any;
+  listOfInvitee!: Observable<ICheckedInvitee[]>;
   guestIn = 0;
   remains = 0;
   totalGuest = 0;
-  totalVisitors$ = new BehaviorSubject<number>(0);
   eventname = this.appConfig.getItemFromSessionStorage(AppUtilities.EVENT_NAME);
   filterTerm = new FormControl('', []);
   dataSource: MatTableDataSource<any> = new MatTableDataSource<any>();
-
-  private readonly eventIDs = 'event_id';
   percen: any;
   percen2: any;
-  inviteeArr: any;
-  tableno: any;
+  //checkedInvitees$!: Observable<ICheckedInviteeRes>;
+  //tableno: any;
   Highcharts: typeof Highcharts = Highcharts;
   updateFromInput = false;
   chart!: any;
@@ -179,15 +187,17 @@ export class Tab1Page implements OnInit, AfterViewInit, AfterViewChecked {
     private sanitizer: DomSanitizer,
     private tr: TranslateService,
     private _trPipe: TranslatePipe,
-    private _unsubscriber: UnsubscriberService,
+    private _unsubscribe: UnsubscriberService,
     private loadingService: LoadingService,
-    private sharedService: SharedService
+    private sharedService: SharedService,
+    private _platform: Platform
   ) {
-    const backButton = () => {
-      const backToLogin = () => new Promise<void>((r, j) => r());
-      this.appConfig.backButtonEventHandler(backToLogin);
-    };
-    backButton();
+    // const backButton = () => {
+    //   const backToLogin = () => new Promise<number>((r, j) => r(0));
+    //   this.appConfig.backButtonEventHandler(backToLogin);
+    // };
+    // backButton();
+    this.platform.backButton.subscribeWithPriority(0, () => {});
     this.registerIcons();
   }
   private barcodeScannerReadyEventListener() {
@@ -220,7 +230,7 @@ export class Tab1Page implements OnInit, AfterViewInit, AfterViewChecked {
   }
   private pullToRefreshServiceHandler() {
     this.sharedService.pullToRefreshSource$
-      .pipe(this._unsubscriber.takeUntilDestroy)
+      .pipe(this._unsubscribe.takeUntilDestroy)
       .subscribe({
         next: () => this.requestInviteesList(),
         error: (err) => console.error(err),
@@ -251,7 +261,7 @@ export class Tab1Page implements OnInit, AfterViewInit, AfterViewChecked {
   }
   private pullToRefreshHandler() {
     this.service.refreshNeeded$
-      .pipe(this._unsubscriber.takeUntilDestroy)
+      .pipe(this._unsubscribe.takeUntilDestroy)
       .subscribe({
         next: () => this.requestInviteesList(),
         error: (err) => console.error('Failed to pull for refresh', err),
@@ -268,7 +278,7 @@ export class Tab1Page implements OnInit, AfterViewInit, AfterViewChecked {
     };
 
     this.filterTerm.valueChanges
-      .pipe(this._unsubscriber.takeUntilDestroy)
+      .pipe(this._unsubscribe.takeUntilDestroy)
       .subscribe({
         next: (searchText: string | null) => search(searchText),
         error: (err) => console.error(err),
@@ -305,21 +315,25 @@ export class Tab1Page implements OnInit, AfterViewInit, AfterViewChecked {
     };
     this.dataSource.filterPredicate = filterPredicate;
   }
-  private parseInviteeChecked(inviteeChecked: Object) {
-    this.inviteeArr = inviteeChecked;
-    this.listOfInvitee = this.inviteeArr.verified_invitees;
-    for (let i = 0; i <= this.listOfInvitee; i++) {
-      this.tableno = this.listOfInvitee[i].table_number;
-    }
-    this.guestIn = this.inviteeArr.number_of_verified_invitees;
-    this.dataSource = new MatTableDataSource(this.listOfInvitee);
-    this.dataSourceFilter();
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
+  private parseInviteeChecked(inviteeChecked: ICheckedInviteeRes) {
+    const initDataSource = (checkedInvitees: ICheckedInvitee[]) => {
+      this.dataSource = new MatTableDataSource(checkedInvitees);
+      this.dataSourceFilter();
+      this.dataSource.paginator = this.paginator;
+      this.dataSource.sort = this.sort;
+    };
+    this.listOfInvitee = of(inviteeChecked?.verified_invitees ?? []);
+    this.guestIn = inviteeChecked?.number_of_verified_invitees ?? 0;
+    this.listOfInvitee
+      .pipe(this._unsubscribe.takeUntilDestroy)
+      .subscribe(initDataSource);
   }
-  private parseGetAllInvitees(getAllinvitee: Object) {
-    this.inviteeArr = getAllinvitee;
-    this.totalGuest = this.inviteeArr.totalVisitor;
+  private parseGetAllInvitees(getAllInvitees: IInviteeRes) {
+    this.totalGuest = getAllInvitees.totalVisitor ?? 0;
+    this.remains = this.totalGuest - this.guestIn;
+    this.percen = (this.guestIn / this.totalGuest) * 100;
+    this.percen2 = (this.remains / this.totalGuest) * 100;
+    this.updateChartOptions();
   }
   private updateChartOptions() {
     const self = this,
@@ -366,38 +380,39 @@ export class Tab1Page implements OnInit, AfterViewInit, AfterViewChecked {
     this.isReadyChart.set(true);
   }
   private requestInviteesList() {
-    this.loadingService.startLoading().then((loading) => {
-      const eventId = this.appConfig.getItemFromSessionStorage(
-        AppUtilities.EVENT_ID
+    const eventId = this.appConfig.getItemFromSessionStorage(
+      AppUtilities.EVENT_ID
+    );
+    const inviteeChecked$ = from(this.service.inviteeChecked(eventId));
+    const getAllInvitees$ = from(this.service.getAllInvitees(eventId));
+    const obs$ = zip(inviteeChecked$, getAllInvitees$);
+
+    const erroneousRes = async (err: any) => {
+      AppUtilities.showErrorMessage(
+        '',
+        this._trPipe.transform('dashboardPage.errors.failedToFetchInvitees')
       );
-      let inviteeChecked$ = from(this.service.inviteeChecked(eventId));
-      let getAllinvitee$ = from(this.service.getAllinvitee(eventId)!);
-      let observables = zip(inviteeChecked$, getAllinvitee$);
-      observables
-        .pipe(
-          this._unsubscriber.takeUntilDestroy,
-          finalize(() => this.loadingService.dismiss())
+    };
+
+    const success = (results: void | [ICheckedInviteeRes, IInviteeRes]) => {
+      if (!results) return;
+      this.parseInviteeChecked(results[0]);
+      this.parseGetAllInvitees(results[1]);
+    };
+
+    this.loadingService
+      .beginLoading()
+      .pipe(
+        this._unsubscribe.takeUntilDestroy,
+        mergeMap((loading) =>
+          obs$.pipe(
+            finalize(() => loading.close()),
+            catchError((err) => erroneousRes(err)),
+            filterNotNull()
+          )
         )
-        .subscribe({
-          next: (res) => {
-            let [inviteeChecked, getAllinvitee] = res;
-            this.parseInviteeChecked(inviteeChecked);
-            this.parseGetAllInvitees(getAllinvitee!);
-            this.remains = this.totalGuest - this.guestIn;
-            this.percen = (this.guestIn / this.totalGuest) * 100;
-            this.percen2 = (this.remains / this.totalGuest) * 100;
-            this.updateChartOptions();
-          },
-          error: (err) => {
-            this.tr.get('defaults.errors.failed').subscribe({
-              next: (message) => {
-                AppUtilities.showErrorMessage('', message);
-              },
-            });
-            throw err;
-          },
-        });
-    });
+      )
+      .subscribe(success);
   }
   private async requestPermissions(): Promise<boolean> {
     const { camera } = await BarcodeScanner.requestPermissions();
@@ -445,7 +460,7 @@ export class Tab1Page implements OnInit, AfterViewInit, AfterViewChecked {
       .catch((err) => {
         this.tr
           .get('defaults.labels.cameraPermissionsDenied')
-          .pipe(this._unsubscriber.takeUntilDestroy)
+          .pipe(this._unsubscribe.takeUntilDestroy)
           .subscribe({
             next: (message) => AppUtilities.showErrorMessage('', message),
             error: (err) => console.error(err),

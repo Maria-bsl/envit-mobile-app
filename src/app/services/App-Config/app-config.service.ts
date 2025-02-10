@@ -7,6 +7,7 @@ import { Platform } from '@ionic/angular/standalone';
 import { Location } from '@angular/common';
 import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 @Injectable({
   providedIn: 'root',
@@ -80,6 +81,9 @@ export class AppConfigService {
     this.platform.backButton.subscribeWithPriority(0, () => {
       callback();
     });
+  }
+  isEmptySessionStorage() {
+    return sessionStorage.length === 0;
   }
   getPreviousRoute(history: string[]): string {
     return history.length > 1 ? history[history.length - 2] : '';

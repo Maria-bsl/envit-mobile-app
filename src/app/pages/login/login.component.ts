@@ -21,7 +21,11 @@ import {
   IonButton,
 } from '@ionic/angular/standalone';
 import { LoadingController } from '@ionic/angular';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import {
+  TranslateModule,
+  TranslatePipe,
+  TranslateService,
+} from '@ngx-translate/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -34,15 +38,33 @@ import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Router } from '@angular/router';
-import { Subscription, finalize, switchMap, tap } from 'rxjs';
+import {
+  Observable,
+  ReplaySubject,
+  Subject,
+  Subscription,
+  catchError,
+  concatMap,
+  finalize,
+  mergeMap,
+  of,
+  switchMap,
+  tap,
+} from 'rxjs';
 import { TranslateConfigService } from '../../translate-config.service';
 import { AppUtilities } from '../../core/utils/AppUtilities';
-import { LoginResponse } from '../../core/responses/LoginResponse';
+import {
+  EventDetailsResponse,
+  LoginResponse,
+} from '../../core/responses/LoginResponse';
 import { ServiceService } from '../../services/service.service';
 import { FLoginPayload } from '../../core/forms/f-login-payload';
 import { UnsubscriberService } from '../../services/unsubscriber/unsubscriber.service';
 import { AppConfigService } from 'src/app/services/App-Config/app-config.service';
-import { LoadingService } from 'src/app/services/loading-service/loading.service';
+import {
+  filterNotNull,
+  LoadingService,
+} from 'src/app/services/loading-service/loading.service';
 import { inOutAnimation } from 'src/app/core/shared/fade-in-out-animation';
 
 @Component({
@@ -68,9 +90,10 @@ import { inOutAnimation } from 'src/app/core/shared/fade-in-out-animation';
     IonText,
     IonButton,
   ],
+  providers: [TranslatePipe],
   animations: [inOutAnimation],
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent {
   loginForm!: FormGroup;
   language: any;
   @ViewChild('ionLoading') ionLoading!: IonLoading;
@@ -84,14 +107,15 @@ export class LoginComponent implements OnInit {
     private translate: TranslateService,
     private _unsubscriber: UnsubscriberService,
     private _appConfig: AppConfigService,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
+    private _trPipe: TranslatePipe
   ) {
-    this.registerIcons();
     const backButton = () => {
-      const backToLogin = () => new Promise((r, j) => r(console.log));
+      const backToLogin = () => new Promise<void>((r, j) => r());
       this._appConfig.backButtonEventHandler(backToLogin);
     };
     backButton();
+    this.registerIcons();
     this.translateConfigService.getDefaultLanguage();
     this.language = this.translateConfigService.getCurrentLang();
     this.createLoginFormGroup();
@@ -110,75 +134,82 @@ export class LoginComponent implements OnInit {
     const icons = ['lock', 'eye', 'eye-off'];
     this._appConfig.addIcons(icons, '/assets/feather');
   }
-  private parseLoginResponse(res: LoginResponse) {
-    this._appConfig.addSessionStorageItem(
-      AppUtilities.TOKEN_NAME,
-      JSON.stringify({ mobile: res.Mobile_Number })
-    );
-    if (res.event_details && res.event_details.length > 0) {
-      this._appConfig.addSessionStorageItem(
-        AppUtilities.EVENT_DETAILS_LIST,
-        JSON.stringify(res.event_details)
-      );
-      this.router.navigateByUrl('switch', {
-        state: { data: res.event_details },
-        replaceUrl: true,
-      });
-    } else {
-      this.translate.get('defaults.errors.failed').subscribe({
-        next: (message) => {
-          AppUtilities.showErrorMessage(message, res.message ?? '');
-          this.router.navigate(['login']);
-        },
-      });
-    }
-  }
-  onClickLogin() {
-    const erroneousRes = async (err: any) => {
-      (await this.loadingService.isLoading()) && this.loadingService.dismiss();
-      this.translate
-        .get('loginPage.loginForm.errors.loginFailed')
-        .pipe(this._unsubscriber.takeUntilDestroy)
-        .subscribe({
-          next: (message) => {
-            AppUtilities.showErrorMessage('', err.error.message);
-            this.router.navigate(['/login']);
-          },
-        });
-    };
-    const login = () => {
+  signUserIn(event: Event) {
+    const login = (): Observable<LoginResponse> => {
       return this.service.loginFunc({
         ...this.loginForm.value,
-        mobile_number: '0' + this.mobile_number.value,
+        mobile_number: `0${this.mobile_number.value}`,
       } as FLoginPayload);
     };
-    if (this.loginForm.valid) {
-      this.loadingService
-        .startLoading()
-        .then((loading) => {
-          login()
-            .pipe(
-              this._unsubscriber.takeUntilDestroy,
-              finalize(() => this.loadingService.dismiss())
+    const erroneousRes = async (err: any) => {
+      switch (err.error.message.toLocaleLowerCase()) {
+        case 'Invalid mobile number or password'.toLocaleLowerCase():
+          AppUtilities.showErrorMessage(
+            '',
+            this._trPipe.transform(
+              'loginPage.loginForm.errors.invalidUsernameOrPassword'
             )
-            .subscribe({
-              next: (res) => this.parseLoginResponse(res),
-              error: (err) => erroneousRes(err),
-            });
-        })
-        .catch((err) => console.error(err));
-    } else {
-      this.loginForm.markAllAsTouched();
-    }
+          );
+          this.router.navigate(['/login']);
+          break;
+        default:
+          AppUtilities.showErrorMessage(
+            '',
+            this._trPipe.transform(
+              'loginPage.loginForm.errors.loginFailedContactSupport'
+            )
+          );
+          break;
+      }
+    };
+    const authorizeUser = (
+      mobileNumber: string,
+      eventDetails: EventDetailsResponse[]
+    ) => {
+      this._appConfig.addSessionStorageItem(
+        AppUtilities.TOKEN_NAME,
+        JSON.stringify({ mobile: mobileNumber })
+      );
+      this._appConfig.addSessionStorageItem(
+        AppUtilities.EVENT_DETAILS_LIST,
+        JSON.stringify(eventDetails)
+      );
+      this.router.navigate(['/switch'], {
+        state: { data: eventDetails },
+        replaceUrl: true,
+      });
+    };
+    const parseLogin = (res: void | LoginResponse) => {
+      if (res && res.event_details) {
+        authorizeUser(res.Mobile_Number, res.event_details);
+      } else {
+        const title = this._trPipe.transform('defaults.errors.failed');
+        const message = this._trPipe.transform(
+          'loginPage.loginForm.errors.loginFailedContactSupport'
+        );
+        AppUtilities.showErrorMessage(title, message);
+      }
+    };
+    this.loadingService
+      .beginLoading()
+      .pipe(
+        this._unsubscriber.takeUntilDestroy,
+        mergeMap((loading) =>
+          login().pipe(
+            this._unsubscriber.takeUntilDestroy,
+            finalize(() => loading.close()),
+            catchError((err) => erroneousRes(err)),
+            filterNotNull()
+          )
+        )
+      )
+      .subscribe(parseLogin);
   }
   resetPage() {
     this.router.navigate(['recoverpwd']);
   }
   tryEvent() {
     this.router.navigate(['pricing']);
-  }
-  ngOnInit() {
-    this._appConfig.clearSessionStorage();
   }
   get mobile_number() {
     return this.loginForm.get('mobile_number') as FormControl;

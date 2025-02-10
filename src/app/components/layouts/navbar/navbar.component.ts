@@ -140,7 +140,7 @@ export class NavbarComponent implements OnInit {
       this.appConfig.clearSessionStorage();
       setTimeout(() => {
         this.loadingService.dismiss();
-        this.router.navigate(['login']);
+        this.router.navigate(['login']).then(() => location.reload());
       }, 800);
     });
   }

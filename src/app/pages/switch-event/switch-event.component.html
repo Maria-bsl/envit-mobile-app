@@ -1,7 +1,7 @@
 <app-navbar></app-navbar>
 <ion-content class="ion-padding">
   <ion-loading #ionLoading spinner="circles"></ion-loading>
-  <div class="d-flex flex-column">
+  <div class="flex flex-col w-full">
     <ion-text class="display-4">
       {{ "switchEvent.welcomeText" | translate }}
     </ion-text>
@@ -9,24 +9,31 @@
       {{ "switchEvent.selectEventText" | translate }}
     </ion-text>
   </div>
-  <mat-list role="list" class="w-100">
-    <mat-list-item
-      class="w-100"
-      role="listitem"
-      *ngFor="let eventDetail of eventsList; index as ind"
-    >
-      <mat-radio-button
-        (change)="eventChanged(ind)"
-        [checked]="ind === selected"
-        color="primary"
-        [value]="eventDetail.event_id"
-        class="w-100"
+  <div *ngIf="eventsList.length > 0" class="flex flex-col w-full space-y-4">
+    <mat-list role="list" class="!w-full">
+      <mat-list-item
+        class="!w-full"
+        role="listitem"
+        *ngFor="let eventDetail of eventsList; index as ind"
       >
-        {{ eventDetail.event_name }}
-      </mat-radio-button>
-    </mat-list-item>
-  </mat-list>
-  <ion-button expand="block" class="w-100 mt-4" (click)="openDashboard()">
-    {{ "defaults.actions.continue" | translate }}
-  </ion-button>
+        <mat-radio-button
+          (change)="eventChanged(ind)"
+          [checked]="ind === selected"
+          color="primary"
+          [value]="eventDetail.event_id"
+          class="!w-full"
+        >
+          {{ eventDetail.event_name }}
+        </mat-radio-button>
+      </mat-list-item>
+    </mat-list>
+    <ion-button
+      [disabled]="selected === -1"
+      expand="block"
+      class="!w-full"
+      (click)="openDashboard($event)"
+    >
+      {{ "defaults.actions.continue" | translate }}
+    </ion-button>
+  </div>
 </ion-content>

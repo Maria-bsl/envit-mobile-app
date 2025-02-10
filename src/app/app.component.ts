@@ -16,14 +16,6 @@ export class AppComponent implements OnInit {
     private router: Router,
     private themeManagerService: ThemeManagerService
   ) {}
-  private checkIsLoggedInUser() {
-    let userId = localStorage.getItem(AppUtilities.TOKEN_user);
-    if (userId && userId.length > 0) {
-      this.router.navigate(['tabs/dashboard']);
-    } else if (!localStorage.getItem('currentLang')) {
-      this.router.navigate(['splash']);
-    }
-  }
   ngOnInit(): void {
     //this.checkIsLoggedInUser();
   }

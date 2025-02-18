@@ -10,12 +10,6 @@
         <ion-icon name="add-outline"></ion-icon>
       </ion-button>
     </div>
-    <!-- <ion-searchbar
-      placeholder="{{'dashboardPage.search' | translate}}"
-      showCancelButton="focus"
-      [formControl]="searchInput"
-      class="!text-xs"
-    ></ion-searchbar> -->
     <label
       class="input input-sm input-bordered flex items-center gap-2 w-full mb-2"
     >
@@ -39,36 +33,49 @@
         />
       </svg>
     </label>
-    <div class="d-flex flex-column">
-      <div class="d-flex align-items-center my-2">
-        <ng-container>
-          <button
-            *ngIf="showingList; else fabListButton"
-            mat-mini-fab
-            (click)="showingList = true"
-          >
-            <mat-icon matPrefix svgIcon="card-checklist"></mat-icon>
-          </button>
-          <ng-template #fabListButton>
-            <button mat-icon-button (click)="showingList = true">
+    <div class="flex flex-col">
+      <div class="flex flex-row items-center justify-between w-full">
+        <div class="flex flex-row items-center my-2">
+          <ng-container>
+            <button
+              *ngIf="showingList; else fabListButton"
+              mat-mini-fab
+              (click)="showingList = true"
+            >
               <mat-icon matPrefix svgIcon="card-checklist"></mat-icon>
             </button>
-          </ng-template>
-        </ng-container>
-        <ng-container>
-          <button
-            *ngIf="!showingList; else fabTableButton"
-            mat-mini-fab
-            (click)="showingList = false"
-          >
-            <mat-icon matPrefix svgIcon="table"></mat-icon>
-          </button>
-          <ng-template #fabTableButton>
-            <button mat-icon-button (click)="showingList = false">
+            <ng-template #fabListButton>
+              <button mat-icon-button (click)="showingList = true">
+                <mat-icon matPrefix svgIcon="card-checklist"></mat-icon>
+              </button>
+            </ng-template>
+          </ng-container>
+          <ng-container>
+            <button
+              *ngIf="!showingList; else fabTableButton"
+              mat-mini-fab
+              (click)="showingList = false"
+            >
               <mat-icon matPrefix svgIcon="table"></mat-icon>
             </button>
-          </ng-template>
-        </ng-container>
+            <ng-template #fabTableButton>
+              <button mat-icon-button (click)="showingList = false">
+                <mat-icon matPrefix svgIcon="table"></mat-icon>
+              </button>
+            </ng-template>
+          </ng-container>
+        </div>
+        <select
+          class="select select-sm select-ghost select-bordered w-fit max-w-xs"
+          [formControl]="filteredInput"
+        >
+          <option [value]="false" selected>
+            {{'defaults.labels.all' | translate}}
+          </option>
+          <option [value]="true">
+            {{'defaults.labels.notScanned' | translate}}
+          </option>
+        </select>
       </div>
       <ng-container *ngIf="showingList; else tableView">
         <div id="list-view" class="d-flex flex-column" [@inOutAnimation]>
@@ -154,6 +161,11 @@
           >{{("defaults.labels.filterNoDataFound" | translate)}}
           <b>"{{searchInput.value}}"</b></ion-text
         >
+      </ng-container>
+      <ng-container *ngIf="dataSource.data.length === 0">
+        <ion-text class="!text-sm !w-full !text-center !pb-4 pt-2"
+          >{{("defaults.errors.notAvailable" | translate)}}
+        </ion-text>
       </ng-container>
       <mat-paginator
         #paginator

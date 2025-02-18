@@ -8,9 +8,11 @@ import { LoadingDialogComponent } from '../../components/dialogs/loading-dialog/
 import {
   BehaviorSubject,
   concatMap,
+  defer,
   filter,
   firstValueFrom,
   lastValueFrom,
+  map,
   mergeMap,
   Observable,
   of,
@@ -22,13 +24,14 @@ import {
   timer,
 } from 'rxjs';
 import { UnsubscriberService } from '../unsubscriber/unsubscriber.service';
+import { AppConfigService } from '../App-Config/app-config.service';
 
 export const filterNotNull =
-  <T>(): OperatorFunction<T, Exclude<T, null | undefined>> =>
+  <T>(): OperatorFunction<T, Exclude<T, null | undefined | void>> =>
   (source$) =>
     source$.pipe(
       filter((value) => value !== null && value !== undefined)
-    ) as Observable<Exclude<T, null | undefined>>;
+    ) as Observable<Exclude<T, null | undefined | void>>;
 
 @Injectable({
   providedIn: 'root',
@@ -41,7 +44,8 @@ export class LoadingService {
   private _loading$ = this.load$.asObservable();
   constructor(
     private readonly _dialog: MatDialog,
-    private unsubscribe: UnsubscriberService
+    private unsubscribe: UnsubscriberService,
+    private _appConfig: AppConfigService
   ) {
     const loaderTimeout = (LIMIT: number) => {
       this._loading$
@@ -85,22 +89,18 @@ export class LoadingService {
     this.loading$.next(dialogRef);
     return firstValueFrom(this.loading$.asObservable());
   }
-  beginLoading() {
-    const dialogRef = this._dialog.open(LoadingDialogComponent, {
-      panelClass: 'dialog-loading-panel-class',
-      disableClose: true,
-    });
-    const ref$ = of(dialogRef);
-    ref$
-      .pipe(
-        filterNotNull(),
-        switchMap((loading) =>
-          timer(30000).pipe(tap(() => loading && loading.close()))
-        ),
-        concatMap(() => [])
+  beginLoading(timeout = 30000) {
+    const dialogRef = () =>
+      this._dialog.open(LoadingDialogComponent, {
+        panelClass: 'dialog-loading-panel-class',
+        disableClose: true,
+      });
+    return defer(() => of(dialogRef)).pipe(
+      map((ref) => ref()),
+      tap((loading) =>
+        timer(timeout).subscribe((next) => loading && loading.close())
       )
-      .subscribe();
-    return ref$;
+    );
   }
   dismiss() {
     this.stopLoading();

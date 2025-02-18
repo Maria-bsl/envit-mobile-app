@@ -5,6 +5,7 @@ import {
   OnDestroy,
   OnInit,
   QueryList,
+  signal,
   ViewChild,
   ViewChildren,
 } from '@angular/core';
@@ -45,7 +46,24 @@ import { NavbarComponent } from 'src/app/components/layouts/navbar/navbar.compon
 import { MatTableDataSource } from '@angular/material/table';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Router, NavigationExtras } from '@angular/router';
-import { Subscription, catchError, finalize, from, mergeMap } from 'rxjs';
+import {
+  Observable,
+  ReplaySubject,
+  Subject,
+  Subscription,
+  catchError,
+  filter,
+  finalize,
+  from,
+  map,
+  mergeMap,
+  of,
+  pairwise,
+  switchMap,
+  tap,
+  withLatestFrom,
+  zip,
+} from 'rxjs';
 import { InviteesTable } from 'src/app/core/enums/invitees-table';
 import { AppUtilities } from 'src/app/core/utils/AppUtilities';
 import { ServiceService } from 'src/app/services/service.service';
@@ -63,8 +81,12 @@ import {
   LoadingService,
 } from 'src/app/services/loading-service/loading.service';
 import { SharedService } from 'src/app/services/shared-service/shared.service';
-import { IInviteeRes } from 'src/app/core/responses/invitee';
+import { IInviteeRes, Visitor } from 'src/app/core/responses/invitee';
 import { IReadQrCode } from 'src/app/core/responses/read-qr-code';
+import {
+  ICheckedInvitee,
+  ICheckedInviteeRes,
+} from 'src/app/core/responses/checked-invitees';
 
 @Component({
   selector: 'app-tab3',
@@ -97,35 +119,19 @@ import { IReadQrCode } from 'src/app/core/responses/read-qr-code';
   providers: [TranslatePipe],
 })
 export class Tab3Page implements OnInit, OnDestroy, AfterViewInit {
-  subscriptions: Subscription[] = [];
   showingList: boolean = true;
-  userInfo: any;
-  listOfInvitee: any;
   guestIn: any;
   eventname: string = '';
   InviteesTable: typeof InviteesTable = InviteesTable;
-
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   event_id: any;
-  filterTerm: string = '';
-  private readonly eventIDs = 'event_id';
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  private readonly event_name = 'event_name';
-
-  private readonly totalVisitor = 'totalVisitor';
-  result: any;
-  qrResponse: any;
-  errMsg: any;
-  resp: any;
-  msg: any;
-  inviteeArr: any;
-  // eslint-disable-next-line max-len
-  dataSource: MatTableDataSource<any> = new MatTableDataSource<any>();
-  tableLoading: boolean = false;
+  dataSource: MatTableDataSource<Visitor> = new MatTableDataSource<Visitor>();
   searchInput: FormControl = new FormControl('', []);
   @ViewChild('paginator') paginator!: MatPaginator;
   @ViewChildren('templateList', { read: ElementRef })
   templateListRef!: QueryList<ElementRef>;
+  filteredInput = new FormControl<boolean | null>(null, []);
+  checkedInvitees$ = new ReplaySubject<ICheckedInvitee[]>();
+  allInvitees$ = new ReplaySubject<Visitor[]>();
   constructor(
     private service: ServiceService,
     private appConfig: AppConfigService,
@@ -140,6 +146,52 @@ export class Tab3Page implements OnInit, OnDestroy, AfterViewInit {
     private _trPipe: TranslatePipe
   ) {
     addIcons({ addOutline });
+    this.filterInputChanged();
+    this.filteredInput.setValue(false);
+  }
+  private filterInputChanged() {
+    const isFractionEqualToOne = (fractionStr: string) => {
+      const parts = fractionStr.split('/');
+      if (parts.length !== 2) return false;
+      const numerator = parseInt(parts[0], 10);
+      const denominator = parseInt(parts[1], 10);
+      if (denominator === 0) return false;
+      return numerator / denominator === 1;
+    };
+    const filterUncheckedInvitees = (lists: [ICheckedInvitee[], Visitor[]]) => {
+      const checkedInvitees = lists[0].filter((checked) =>
+        isFractionEqualToOne(checked.scan_status!)
+      );
+      return lists[1].filter((invitee) =>
+        checkedInvitees.every(
+          (checked) => checked.visitor_name != invitee.visitor_name
+        )
+      );
+    };
+    this.filteredInput.valueChanges
+      .pipe(
+        this._unsubsriber.takeUntilDestroy,
+        filterNotNull(),
+        switchMap((value) =>
+          zip(
+            this.checkedInvitees$.asObservable(),
+            this.allInvitees$.asObservable()
+          )
+        ),
+        withLatestFrom(this.filteredInput.valueChanges),
+        map(([lists, value]) =>
+          JSON.parse(value as any as string)
+            ? filterUncheckedInvitees(lists)
+            : lists[1]
+        ),
+        filterNotNull()
+      )
+      .subscribe({
+        next: (visitors) => {
+          (this.dataSource.data = visitors) && this.dataSourceFilter();
+          this.dataSource.paginator = this.paginator;
+        },
+      });
   }
   private registerIcons() {
     let featherIcons = ['list', 'grid'];
@@ -162,33 +214,27 @@ export class Tab3Page implements OnInit, OnDestroy, AfterViewInit {
     });
   }
   private dataSourceFilter() {
-    let filterPredicate = (data: any, filter: string) => {
+    const filterPredicate = (data: any, filter: string) => {
       return data.visitor_name &&
         data.visitor_name
           .toLocaleLowerCase()
           .includes(filter.toLocaleLowerCase())
-        ? true
-        : false ||
-          (data.mobile_no &&
-            data.mobile_no
-              .toLocaleLowerCase()
-              .includes(filter.toLocaleLowerCase()))
         ? true
         : false;
     };
     this.dataSource.filterPredicate = filterPredicate;
   }
   private searchInputChanged() {
-    this.subscriptions.push(
-      this.searchInput.valueChanges.subscribe({
+    this.searchInput.valueChanges
+      .pipe(this._unsubsriber.takeUntilDestroy)
+      .subscribe({
         next: (searchText) => {
           this.dataSource.filter = searchText.trim().toLocaleLowerCase();
           if (this.paginator) {
             this.paginator.firstPage();
           }
         },
-      })
-    );
+      });
   }
   private addedVisitorHandler() {
     this.sharedService.addedVisitor$
@@ -246,30 +292,27 @@ export class Tab3Page implements OnInit, OnDestroy, AfterViewInit {
           break;
       }
     };
-    const success = (res: void | IInviteeRes) => {
-      if (!res) return;
-      this.dataSource = new MatTableDataSource(res.visitors ?? []);
-      this.tableLoading = false;
-      this.dataSourceFilter();
+    const success = (res: [IInviteeRes, ICheckedInviteeRes]) => {
+      this.checkedInvitees$.next(res[1].verified_invitees ?? []);
+      this.allInvitees$.next(res[0].visitors ?? []);
     };
-    const body = { event_id: this.event_id };
     this.loadingService
       .beginLoading()
       .pipe(
-        this._unsubsriber.takeUntilDestroy,
         mergeMap((loading) =>
-          this.service.getAllInvitees(body.event_id).pipe(
+          zip(
+            this.service.getAllInvitees(this.event_id),
+            this.service.inviteeChecked(this.event_id)
+          ).pipe(
             finalize(() => loading.close()),
-            catchError((err) => erroneousRes(err)),
-            filterNotNull()
+            catchError((err) => erroneousRes(err))
           )
-        )
+        ),
+        filterNotNull()
       )
       .subscribe(success);
   }
-  ngOnDestroy(): void {
-    this.subscriptions.forEach((s) => s.unsubscribe());
-  }
+  ngOnDestroy(): void {}
   scanVisitor(invitee: any) {
     const openSwal = (message: string, visitor_name: string) => {
       message = message.replace('{{}}', visitor_name);

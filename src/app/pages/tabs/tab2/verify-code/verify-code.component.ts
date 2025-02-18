@@ -132,13 +132,13 @@ export class VerifyCodeComponent implements OnInit, OnDestroy {
         case 'Failed! Invitee does not exist.'.toLocaleLowerCase():
           AppUtilities.showErrorMessage(
             '',
-            this._trPipe.transform('verifyCode.form.errors.inviteeNotExist')
+            this.tr.instant('verifyCode.form.errors.inviteeNotExist')
           );
           break;
         default:
           AppUtilities.showErrorMessage(
             '',
-            this._trPipe.transform('verifyCode.form.errors.codeNotFound')
+            this.tr.instant('verifyCode.form.errors.codeNotFound')
           );
           break;
       }
@@ -189,21 +189,21 @@ export class VerifyCodeComponent implements OnInit, OnDestroy {
         case 'Failed! Invitee does not exist.'.toLocaleLowerCase():
           AppUtilities.showErrorMessage(
             '',
-            this._trPipe.transform('verifyCode.form.errors.inviteeNotExist')
+            this.tr.instant('verifyCode.form.errors.inviteeNotExist')
           );
           break;
         case 'Failed! Card verification must be on date of event.'.toLocaleLowerCase():
           AppUtilities.showErrorMessage(
             '',
             this._trPipe.transform(
-              'verifyUser.form.errors.invalidVerificationDate'
+              this.tr.instant('verifyUser.form.errors.invalidVerificationDate')
             )
           );
           break;
         default:
           AppUtilities.showErrorMessage(
             '',
-            this._trPipe.transform('verifyUser.form.errors.failedToVerifyCard')
+            this.tr.instant('verifyUser.form.errors.failedToVerifyCard')
           );
           break;
       }
@@ -212,13 +212,13 @@ export class VerifyCodeComponent implements OnInit, OnDestroy {
       if (result.status === 1) {
         AppUtilities.showSuccessMessage(
           '',
-          this._trPipe.transform('qrpage.successfullyScanned')
+          this.tr.instant('qrpage.successfullyScanned')
         );
         this.openDashboard();
         this.input = '';
       } else {
         const message = this.switchScanCardErrorMessage(result.message);
-        AppUtilities.showErrorMessage('', message);
+        AppUtilities.showErrorMessage('', this.tr.instant(message));
         this.input = '';
       }
     };

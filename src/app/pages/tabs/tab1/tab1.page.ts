@@ -316,8 +316,26 @@ export class Tab1Page implements OnInit, AfterViewInit, AfterViewChecked {
     this.dataSource.filterPredicate = filterPredicate;
   }
   private parseInviteeChecked(inviteeChecked: ICheckedInviteeRes) {
+    const parseFraction = (fractionStr: string) => {
+      const [numerator, denominator] = fractionStr
+        .split(' ')[0]
+        .split('/')
+        .map(Number);
+      return numerator / denominator;
+    };
+    const getClosestToCompletion = (visitors: ICheckedInvitee[]) => {
+      return visitors.filter((visitor, _, array) =>
+        array.every(
+          (other) =>
+            other.visitor_name !== visitor.visitor_name ||
+            parseFraction(visitor.scan_status!) >=
+              parseFraction(other.scan_status!)
+        )
+      );
+    };
+
     const initDataSource = (checkedInvitees: ICheckedInvitee[]) => {
-      this.dataSource = new MatTableDataSource(checkedInvitees);
+      this.dataSource.data = getClosestToCompletion(checkedInvitees);
       this.dataSourceFilter();
       this.dataSource.paginator = this.paginator;
       this.dataSource.sort = this.sort;

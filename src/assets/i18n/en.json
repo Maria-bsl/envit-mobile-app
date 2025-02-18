@@ -7,6 +7,7 @@
       "ok": "Ok"
     },
     "errors": {
+      "notAvailable": "Not available",
       "pleaseFill": "Please fill.",
       "failed": "Failed.",
       "unexpectedError": "An unexpected error occurred. Please try again or contact support.",
@@ -16,7 +17,9 @@
       "filterNoDataFound": "No data matching the filter",
       "loadingPleaseWait": "Loading, this may take a minute...",
       "loading": "Loading",
-      "cameraPermissionsDenied": "Camera permissions denied."
+      "cameraPermissionsDenied": "Camera permissions denied.",
+      "all": "All",
+      "notScanned": "Not scanned"
     }
   },
   "refresher": {

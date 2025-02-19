@@ -104,7 +104,8 @@
     "cameraPermissionDenied": "Ruhusa ya kamera imekataliwa.",
     "failedToReadQrCode": "Imeshindwa kusoma msimbo wa qr.",
     "errors": {
-      "failedToFetchInvitees": "Imeshindwa kupata waalikwa. Tafadhali jaribu tena baadaye."
+      "failedToFetchInvitees": "Imeshindwa kupata waalikwa. Tafadhali jaribu tena baadaye.",
+      "noInviteesYet": "Hakuna mwaliko bado"
     }
   },
   "qrpage": {

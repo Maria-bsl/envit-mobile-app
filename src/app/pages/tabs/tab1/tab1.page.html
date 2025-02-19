@@ -141,7 +141,7 @@
         >
           <div
             *ngFor="let column of 'dashboardPage.checkedInviteesTable' | translate; index as i"
-            class="d-flex align-items-center justify-content-between p-1"
+            class="flex flex-row items-center justify-between p-1"
           >
             <ion-text class="!font-light !text-xs">{{column}}</ion-text>
             <ion-text
@@ -173,7 +173,7 @@
               <th
                 *ngFor="let column of 'dashboardPage.checkedInviteesTable' | translate; index as i"
               >
-                <ion-text class="!font-medium !text-xs">{{column}}</ion-text>
+                <ion-text class="!font-semibold !text-xs">{{column}}</ion-text>
               </th>
             </tr>
           </thead>
@@ -216,6 +216,11 @@
         >{{("defaults.labels.filterNoDataFound" | translate)}}
         <b>"{{filterTerm.value}}"</b></ion-text
       >
+    </ng-container>
+    <ng-container *ngIf="dataSource.data.length === 0">
+      <ion-text class="!text-sm !pt-2 !pb-4 w-full text-center"
+        >{{("dashboardPage.errors.noInviteesYet" | translate)}}
+      </ion-text>
     </ng-container>
     <div class="mt-2 pt-2">
       <mat-paginator

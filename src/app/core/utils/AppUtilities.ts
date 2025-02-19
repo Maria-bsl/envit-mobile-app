@@ -16,6 +16,7 @@ export class AppUtilities {
       text: message,
       icon: 'error',
       heightAuto: false,
+      confirmButtonColor: 'var(--sys-primary)',
     });
   }
   static showWarningMessage(title: string, message: string) {
@@ -24,6 +25,7 @@ export class AppUtilities {
       text: message,
       icon: 'warning',
       heightAuto: false,
+      confirmButtonColor: 'var(--sys-primary)',
     });
   }
   static showSuccessMessage(title: string, message: string) {
@@ -32,6 +34,7 @@ export class AppUtilities {
       text: message,
       icon: 'success',
       heightAuto: false,
+      confirmButtonColor: 'var(--sys-primary)',
     });
   }
   static showSuccessToast(title: string) {
@@ -42,6 +45,7 @@ export class AppUtilities {
       position: 'center',
       showConfirmButton: false,
       timer: 3000,
+      confirmButtonColor: 'var(--sys-primary)',
     });
   }
   //static httpE;
@@ -53,6 +57,7 @@ export class AppUtilities {
       showCancelButton: true,
       confirmButtonText: 'Scan',
       heightAuto: false,
+      confirmButtonColor: 'var(--sys-primary)',
     });
   }
   static matchValidator(matchTo: string, reverse?: boolean): ValidatorFn {

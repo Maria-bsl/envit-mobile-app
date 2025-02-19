@@ -99,7 +99,8 @@
     "cameraPermissionDenied": "Camera permissions denied.",
     "failedToReadQrCode": "Failed to read qr code.",
     "errors": {
-      "failedToFetchInvitees": "Failed to fetch invitees. Please try again later."
+      "failedToFetchInvitees": "Failed to fetch invitees. Please try again later.",
+      "noInviteesYet": "No invitees yet"
     }
   },
   "qrpage": {

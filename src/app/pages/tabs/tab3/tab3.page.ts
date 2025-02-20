@@ -243,6 +243,12 @@ export class Tab3Page implements OnInit, OnDestroy, AfterViewInit {
         next: () => this.requestInviteesList(),
         error: (err) => console.error(err),
       });
+    this.sharedService.pullToRefreshSource$
+      .pipe(this._unsubsriber.takeUntilDestroy)
+      .subscribe({
+        next: () => this.requestInviteesList(),
+        error: (err) => console.error(err),
+      });
   }
   ngOnInit() {
     this.registerIcons();

@@ -22,7 +22,14 @@ import {
   TranslateService,
 } from '@ngx-translate/core';
 import { Router, NavigationExtras } from '@angular/router';
-import { Subscription, catchError, finalize, from, mergeMap } from 'rxjs';
+import {
+  Subscription,
+  catchError,
+  finalize,
+  from,
+  mergeMap,
+  switchMap,
+} from 'rxjs';
 import { AppUtilities } from 'src/app/core/utils/AppUtilities';
 import { ServiceService } from 'src/app/services/service.service';
 import { AppConfigService } from 'src/app/services/App-Config/app-config.service';
@@ -60,31 +67,11 @@ import { IReadQrCode } from 'src/app/core/responses/read-qr-code';
   providers: [TranslatePipe],
 })
 export class VerifyCodeComponent implements OnInit, OnDestroy {
-  subsriptions: Subscription[] = [];
-  eventname: string = '';
-  result: any;
-  qrResponse: any;
-  private readonly TOKEN_user = 'bizlogicj';
-
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  private readonly event_name = 'event_name';
-  private readonly eventIDs = 'event_id';
-  event_id: string = '';
-  errMsg: any;
-  resp: any;
-  msg: any;
-  userId: any;
-  visitor_id: any;
-  qrcode: any;
-  verifyresponse: any;
-  qrinfo: any;
-  input: string = '';
   constructor(
     private router: Router,
     private service: ServiceService,
     private tr: TranslateService,
     private appConfig: AppConfigService,
-    private translate: TranslateService,
     private _unsubscriber: UnsubscriberService,
     private loadingService: LoadingService,
     private sharedService: SharedService,
@@ -115,17 +102,8 @@ export class VerifyCodeComponent implements OnInit, OnDestroy {
         return 'qrpage.failedToScanTryAgain';
     }
   }
-  ngOnInit() {
-    this.eventname = this.appConfig.getItemFromSessionStorage(
-      AppUtilities.EVENT_NAME
-    );
-    this.event_id = this.appConfig.getItemFromSessionStorage(
-      AppUtilities.EVENT_ID
-    );
-  }
-  ngOnDestroy(): void {
-    this.subsriptions.forEach((s) => s.unsubscribe());
-  }
+  ngOnInit() {}
+  ngOnDestroy(): void {}
   sendQr(event: Event) {
     const erroneousRes = async (err: any) => {
       switch (err.error.message.toLocaleLowerCase()) {
@@ -143,7 +121,7 @@ export class VerifyCodeComponent implements OnInit, OnDestroy {
           break;
       }
     };
-    const success = (result: void | IReadQrCode) => {
+    const success = (result: IReadQrCode) => {
       if (!result) return;
       const navigationExtras: NavigationExtras = {
         state: {
@@ -157,12 +135,15 @@ export class VerifyCodeComponent implements OnInit, OnDestroy {
         this.router.navigate(['tabs/tab2/verifyuser'], navigationExtras);
       }
     };
-    const body = { qr_code: this.postData.qrcode, event_id: this.event_id };
+    const body = {
+      qr_code: this.postData.qrcode,
+      event_id: this.appConfig.getItemFromSessionStorage(AppUtilities.EVENT_ID),
+    };
     this.loadingService
       .beginLoading()
       .pipe(
         this._unsubscriber.takeUntilDestroy,
-        mergeMap((loading) =>
+        switchMap((loading) =>
           this.service.sendQr(body).pipe(
             finalize(() => loading.close()),
             catchError((err) => erroneousRes(err)),
@@ -181,9 +162,6 @@ export class VerifyCodeComponent implements OnInit, OnDestroy {
       .catch((err) => console.error(err));
   }
   verifyOneVisitor() {
-    this.userId = this.appConfig.getItemFromSessionStorage(
-      AppUtilities.TOKEN_user
-    );
     const erroneousRes = async (err: any) => {
       switch (err.error.message.toLocaleLowerCase()) {
         case 'Failed! Invitee does not exist.'.toLocaleLowerCase():
@@ -215,33 +193,28 @@ export class VerifyCodeComponent implements OnInit, OnDestroy {
           this.tr.instant('qrpage.successfullyScanned')
         );
         this.openDashboard();
-        this.input = '';
       } else {
         const message = this.switchScanCardErrorMessage(result.message);
         AppUtilities.showErrorMessage('', this.tr.instant(message));
-        this.input = '';
       }
     };
-    const params = {
-      event_id: this.event_id,
+    const body = {
+      event_id: this.appConfig.getItemFromSessionStorage(AppUtilities.EVENT_ID),
       qr_code: this.postData.qrcode,
       Number_Of_CheckingIn_Invitees: '1',
-      User_Id: this.userId,
+      User_Id: this.appConfig.getItemFromSessionStorage(
+        AppUtilities.TOKEN_user
+      ),
     };
     this.loadingService
       .beginLoading()
       .pipe(
         this._unsubscriber.takeUntilDestroy,
         mergeMap((loading) =>
-          this.service.verifyQr(params).pipe(
-            this._unsubscriber.takeUntilDestroy,
-            mergeMap((loading) =>
-              this.service.verifyQr(params).pipe(
-                finalize(() => loading.close()),
-                catchError((err) => erroneousRes(err)),
-                filterNotNull()
-              )
-            )
+          this.service.verifyQr(body).pipe(
+            finalize(() => loading.close()),
+            catchError((err) => erroneousRes(err)),
+            filterNotNull()
           )
         )
       )

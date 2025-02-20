@@ -32,12 +32,15 @@ import {
   IonText,
 } from '@ionic/angular/standalone';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Subscription, finalize, from } from 'rxjs';
+import { Subscription, catchError, finalize, from, mergeMap } from 'rxjs';
 import { AppUtilities } from 'src/app/core/utils/AppUtilities';
 import { ServiceService } from 'src/app/services/service.service';
 import { AppConfigService } from 'src/app/services/App-Config/app-config.service';
 import { UnsubscriberService } from 'src/app/services/unsubscriber/unsubscriber.service';
-import { LoadingService } from 'src/app/services/loading-service/loading.service';
+import {
+  filterNotNull,
+  LoadingService,
+} from 'src/app/services/loading-service/loading.service';
 import { SharedService } from 'src/app/services/shared-service/shared.service';
 
 @Component({
@@ -73,27 +76,9 @@ import { SharedService } from 'src/app/services/shared-service/shared.service';
 export class VerifyUserComponent implements OnInit, OnDestroy {
   MAX_INVITES_FOR_SELECT = 10;
   subscriptions: Subscription[] = [];
-  eventname: string = '';
-  userId: any;
   qrinfo: any;
   qrcode: any;
-  verifyresponse: any;
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  visitor_id: any;
-
   input: string = '';
-  result: string = '';
-
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  private readonly event_name = 'event_name';
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  private readonly visitorId = 'visitorID';
-  private readonly eventIDs = 'event_id';
-  event_id: string = '';
-  errMsg: any;
-  resp: any;
-  msg: any;
-  count: any;
   postData!: FormGroup;
 
   constructor(
@@ -109,12 +94,6 @@ export class VerifyUserComponent implements OnInit, OnDestroy {
     private tr: TranslateService
   ) {}
   ngOnInit() {
-    this.eventname = this.appConfig.getItemFromSessionStorage(
-      AppUtilities.EVENT_NAME
-    );
-    this.event_id = this.appConfig.getItemFromSessionStorage(
-      AppUtilities.EVENT_ID
-    );
     this.appConfig.backButtonPressed();
     this.createPostDataFormGroup();
     this.readQueryParams();
@@ -151,10 +130,6 @@ export class VerifyUserComponent implements OnInit, OnDestroy {
         if (state) {
           this.qrinfo = state['qrinfo'];
           this.qrcode = state['qrcode'];
-          this.count = Array.from(
-            { length: this.qrinfo.unchecked_invitee },
-            (_, i) => i + 1
-          );
         }
         if (this.qrinfo.unchecked_invitee === 1) {
           this.Number_Of_CheckingIn_Invitees.setValue(1);
@@ -215,7 +190,6 @@ export class VerifyUserComponent implements OnInit, OnDestroy {
     );
   }
   allClear() {
-    // this.result = '';
     this.input = '';
   }
   private openDashboard() {
@@ -230,65 +204,67 @@ export class VerifyUserComponent implements OnInit, OnDestroy {
     if (this.postData.invalid) {
       return;
     }
-    this.userId = this.appConfig.getItemFromSessionStorage(
-      AppUtilities.TOKEN_user
-    );
-    this.visitor_id = this.qrinfo.visitor_id;
     const qrcode = this.qrcode;
     const params = {
-      event_id: this.event_id,
+      event_id: this.appConfig.getItemFromSessionStorage(AppUtilities.EVENT_ID),
       qr_code: qrcode,
       Number_Of_CheckingIn_Invitees: this.Number_Of_CheckingIn_Invitees.value,
-      User_Id: this.userId,
+      User_Id: this.appConfig.getItemFromSessionStorage(
+        AppUtilities.TOKEN_user
+      ),
     };
-    this.loadingService.startLoading().then((loading) => {
-      let native = from(this.service.verifyQr(params));
-      native.pipe(finalize(() => this.loadingService.dismiss())).subscribe({
-        next: (res) => {
-          this.verifyresponse = res;
-          if (this.verifyresponse.status == 1) {
-            this.tr
-              .get('qrpage.successfullyScanned')
-              .pipe(this._unsubscribe.takeUntilDestroy)
-              .subscribe({
-                next: (message) => {
-                  AppUtilities.showSuccessMessage('', message);
-                  this.openDashboard();
-                },
-                error: (err) => console.error(err),
-              });
-            this.input = '';
-            ``;
-          } else {
-            const msg = this.switchScanCardErrorMessage(
-              this.verifyresponse.message
-            );
-            this.tr
-              .get(msg)
-              .pipe(this._unsubscribe.takeUntilDestroy)
-              .subscribe({
-                next: (message) => AppUtilities.showErrorMessage('', message),
-                error: (err) => console.error(err),
-              });
-            this.input = '';
-          }
-        },
-        error: (err) => {
-          if (err.error.errorList) {
-            let messages = err.error.errorList;
-            AppUtilities.showErrorMessage(messages[0], '');
-          } else if (err.error.message) {
-            AppUtilities.showErrorMessage(err.error.message, '');
-          } else {
-            this.translate.get('defaults.errors.failed').subscribe({
-              next: (message) => {
-                AppUtilities.showErrorMessage(message, '');
-              },
-            });
-          }
-        },
-      });
-    });
+    const erroneousRes = async (err: any) => {
+      if (err.error.errorList) {
+        let messages = err.error.errorList;
+        AppUtilities.showErrorMessage(messages[0], '');
+      } else if (err.error.message) {
+        AppUtilities.showErrorMessage(err.error.message, '');
+      } else {
+        this.translate.get('defaults.errors.failed').subscribe({
+          next: (message) => {
+            AppUtilities.showErrorMessage(message, '');
+          },
+        });
+      }
+    };
+    const success = (res: any) => {
+      if (res.status == 1) {
+        this.tr
+          .get('qrpage.successfullyScanned')
+          .pipe(this._unsubscribe.takeUntilDestroy)
+          .subscribe({
+            next: (message) => {
+              AppUtilities.showSuccessMessage('', message);
+              this.openDashboard();
+            },
+            error: (err) => console.error(err),
+          });
+        this.input = '';
+      } else {
+        const msg = this.switchScanCardErrorMessage(res.message);
+        this.tr
+          .get(msg)
+          .pipe(this._unsubscribe.takeUntilDestroy)
+          .subscribe({
+            next: (message) => AppUtilities.showErrorMessage('', message),
+            error: (err) => console.error(err),
+          });
+        this.input = '';
+      }
+    };
+    this.loadingService
+      .beginLoading()
+      .pipe(
+        this._unsubscribe.takeUntilDestroy,
+        mergeMap((loading) =>
+          this.service.verifyQr(params).pipe(
+            finalize(() => loading && loading.close()),
+            catchError((err) => erroneousRes(err)),
+            filterNotNull()
+          )
+        )
+      )
+      .subscribe(success);
   }
   get Number_Of_CheckingIn_Invitees() {
     return this.postData.get('Number_Of_CheckingIn_Invitees') as FormControl;
